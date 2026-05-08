@@ -1,0 +1,21 @@
+{
+  "name": "@janpaul80/klaw",
+  "version": "0.1.0",
+  "description": "Local AI runtime for running agents with your own models and APIs",
+  "main": "index.js",
+  "bin": {
+    "klaw": "index.js"
+  },
+  "scripts": {
+    "test": "echo 'No test suite yet' && exit 0"
+  },
+  "keywords": [
+    "ai",
+    "runtime",
+    "agents",
+    "local",
+    "framework"
+  ],
+  "author": "Paul Hartmann",
+  "license": "MIT"
+}
