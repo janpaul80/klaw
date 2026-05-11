@@ -65,3 +65,12 @@ https://github.com/janpaul80/klaw
 
 ![KLAW run](assets/klaw-run.jpg)
 
+Author
+
+Built by Paul Hartmann
+
+GitHub: @janpaul80
+
+License
+
+MIT
