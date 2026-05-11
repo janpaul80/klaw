@@ -1,31 +1,16 @@
 # KLAW
 
-Local AI runtime for running agents with your own models and APIs.
-
-KLAW is a lightweight local-first runtime that executes agents visibly in the terminal.
-
-It focuses on:
-- transparent execution
-- visible shell actions
-- workspace isolation
-- simple agent flows
-- developer control
-
-No dashboards.
-No cloud dependency.
-No hidden orchestration layers.
+Local AI runtime for agents, shell execution, memory, and bring-your-own-model workflows.
 
 ## Install
 
+```bash
 npm install -g @phartmann80/klaw
 
-## Quickstart
-
-Initialize KLAW:
-
-```bash
-klaw init
+Usage
+bash
 klaw doctor
+klaw init
 klaw run "build a Next.js landing page"
 
 What it does
@@ -36,7 +21,6 @@ Architect: plans task steps
 Writer: creates and modifies files
 Shell: runs commands with permission prompts
 Fixer: handles basic errors and retries
-
 Current features
 Local-first execution
 Workspace isolation
@@ -55,34 +39,16 @@ Philosophy
 
 KLAW is built to stay small, transparent, and hackable.
 
-No dashboards.
-No cloud lock-in.
-No heavy orchestration layer.
-
+No dashboards
+No cloud lock-in
+No heavy orchestration layer
 Package
 
-npm: https://www.npmjs.com/package/@phartmann80/klaw
+npm:
+https://www.npmjs.com/package/@phartmann80/klaw
 
-GitHub: https://github.com/janpaul80/klaw
-
-Author
-
-Built by Paul Hartmann
-GitHub: @janpaul80
-
-License
-
-MIT
-
-
-Then save it and push:
-
-git add README.md assets/
-git commit -m "add README screenshots"
-git push origin main
-git add README.md
-git commit -m "improve README"
-git push origin main
+GitHub:
+https://github.com/janpaul80/klaw
 
 
 ## Screenshots
@@ -99,7 +65,3 @@ git push origin main
 
 ![KLAW run](assets/klaw-run.jpg)
 
-''' bash
-git add README.md assets/
-git commit -m "add README screenshots"
-git push origin main
