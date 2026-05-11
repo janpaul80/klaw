@@ -3,23 +3,24 @@
 const { Command } = require('commander');
 const chalk = require('chalk');
 const path = require('path');
+const os = require('os');
 const fs = require('fs');
 const { executeTask } = require('./src/agents/demo');
 
 const program = new Command();
-program.version('0.1.0');
+program.version('0.1.3');
 
 program
   .command('init')
   .description('Initialize KLAW configuration')
   .action(() => {
-    const configDir = path.join(process.env.HOME, '.klaw');
+    const configDir = path.join(os.homedir(), '.klaw');
     if (!fs.existsSync(configDir)) {
       fs.mkdirSync(configDir);
     }
 
     const config = {
-      version: '0.1.0',
+      version: '0.1.3',
       defaultProvider: 'openai',
       workspace: path.join(process.cwd(), 'klaw-workspace'),
       providers: {
