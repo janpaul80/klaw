@@ -72,4 +72,4 @@ program
     console.log(chalk.green('[KLAW][SYSTEM] Memory system active'));
   });
 
-program.parse();
+program.parse(process.argv);

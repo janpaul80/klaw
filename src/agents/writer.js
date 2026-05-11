@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { appendMemory } = require('../memory');
 const path = require('path');
 
 function isValidPath(workspaceRoot, targetPath) {

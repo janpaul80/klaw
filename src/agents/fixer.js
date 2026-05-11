@@ -1,3 +1,5 @@
+const { appendMemory } = require('../memory');
+
 class FixerAgent {
   constructor(maxRetries = 3) {
     this.maxRetries = maxRetries;

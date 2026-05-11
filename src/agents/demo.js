@@ -2,7 +2,7 @@ const ArchitectAgent = require('./architect');
 const FileWriterAgent = require('./writer');
 const ShellAgent = require('./shell');
 const FixerAgent = require('./fixer');
-const { appendMemory, appendMemoryBlock } = require('./memory');
+const { appendMemory, appendMemoryBlock } = require('../memory');
 const fs = require('fs');
 const path = require('path');
 

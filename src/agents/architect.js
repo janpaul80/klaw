@@ -1,3 +1,5 @@
+const { appendMemory } = require('../memory');
+
 class ArchitectAgent {
   constructor(task) {
     this.task = task;
