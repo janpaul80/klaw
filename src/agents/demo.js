@@ -7,7 +7,8 @@ const fs = require('fs');
 const path = require('path');
 
 function parseConfig() {
-  const configPath = path.join(process.env.HOME, '.klaw', 'config.json');
+  const os = require('os');
+const configPath = path.join(os.homedir(), '.klaw', 'config.json');
   if (fs.existsSync(configPath)) {
     return JSON.parse(fs.readFileSync(configPath, 'utf8'));
   }

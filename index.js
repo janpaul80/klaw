@@ -8,7 +8,7 @@ const fs = require('fs');
 const { executeTask } = require('./src/agents/demo');
 
 const program = new Command();
-program.version('0.1.3');
+program.version('0.1.4');
 
 program
   .command('init')
@@ -20,7 +20,7 @@ program
     }
 
     const config = {
-      version: '0.1.3',
+      version: '0.1.4',
       defaultProvider: 'openai',
       workspace: path.join(process.cwd(), 'klaw-workspace'),
       providers: {
