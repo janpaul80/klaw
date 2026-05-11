@@ -1,3 +1,20 @@
+KLAW is a local-first AI runtime that executes developer tasks through transparent terminal-based agents.
+
+It can:
+- plan coding tasks
+- generate and modify files
+- run shell commands
+- manage lightweight workspace memory
+- retry failed steps
+- create isolated workspaces for experiments and projects
+
+The system is intentionally minimal:
+all actions are visible in the terminal, file writes are transparent, and workflows stay fully local without cloud lock-in.
+
+KLAW is designed for developers who want a hackable AI runtime instead of a closed SaaS coding platform.
+
+
+
 # KLAW
 
 Local AI runtime for agents, shell execution, memory, and bring-your-own-model workflows.
