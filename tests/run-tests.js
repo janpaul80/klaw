@@ -129,6 +129,30 @@ async function testRuntimeSuccessWithFakeProvider() {
   assert.strictEqual(result.commands[1].code, 0);
 }
 
+async function testPublicReadmeIsProfessionalAndPlatformSpecific() {
+  const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
+  assert.match(readme, /(src="public\/logo\.png"|!\[KLAW logo\]\(public\/logo\.png\))/);
+  assert.match(readme, /https:\/\/klaw\.at/);
+  assert.match(readme, /PowerShell/i);
+  assert.match(readme, /WSL/i);
+  assert.match(readme, /macOS/i);
+  assert.match(readme, /Linux/i);
+  assert.match(readme, /Known limitations/i);
+  assert.match(readme, /OPENAI_API_KEY/);
+}
+
+async function testLandingPageUsesRealLogoAndInstallSections() {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  assert.match(html, /src="\/logo\.png"/);
+  assert.doesNotMatch(html, /generated logo/i);
+  assert.match(html, /https:\/\/klaw\.at/);
+  assert.match(html, /PowerShell/);
+  assert.match(html, /WSL/);
+  assert.match(html, /macOS/);
+  assert.match(html, /Linux/);
+  assert.match(html, /Local AI agents, visible in your terminal/);
+}
+
 async function main() {
   const tests = [
     testConfigDefaults,
@@ -137,7 +161,9 @@ async function main() {
     testWriterCreatesProviderFilesInsideWorkspace,
     testShellReturnsExitCodeAndOutput,
     testFixerAppliesProviderPatchAndRetriesOnce,
-    testRuntimeSuccessWithFakeProvider
+    testRuntimeSuccessWithFakeProvider,
+    testPublicReadmeIsProfessionalAndPlatformSpecific,
+    testLandingPageUsesRealLogoAndInstallSections
   ];
 
   for (const test of tests) {

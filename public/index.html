@@ -3,107 +3,499 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>KLAW</title>
-    <meta name="description" content="KLAW is a local-first AI runtime for transparent coding agents.">
+    <title>KLAW - Local AI agents, visible in your terminal</title>
+    <meta name="description" content="KLAW is a local-first AI runtime for transparent terminal-based coding agents.">
     <style>
       :root {
         color-scheme: dark;
+        --bg: #050608;
+        --panel: #0d1015;
+        --panel-2: #12161d;
+        --line: rgba(255, 255, 255, 0.12);
+        --text: #f7f7f2;
+        --muted: #a8b0bd;
+        --soft: #d6d9d1;
+        --accent: #f0efe7;
+        --warm: #d8c891;
+        --green: #8dad7f;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #101411;
-        color: #f5f7f1;
+        background: var(--bg);
+        color: var(--text);
       }
 
       * {
         box-sizing: border-box;
       }
 
+      html {
+        scroll-behavior: smooth;
+      }
+
       body {
         margin: 0;
         min-height: 100vh;
         background:
-          linear-gradient(120deg, rgba(71, 148, 100, 0.18), transparent 34%),
-          radial-gradient(circle at top right, rgba(231, 214, 139, 0.2), transparent 30%),
-          #101411;
-      }
-
-      main {
-        width: min(1120px, calc(100% - 40px));
-        min-height: 100vh;
-        margin: 0 auto;
-        display: grid;
-        align-items: center;
-        grid-template-columns: 0.9fr 1.1fr;
-        gap: 56px;
-        padding: 56px 0;
-      }
-
-      img {
-        width: min(280px, 70vw);
-        height: auto;
-        display: block;
-      }
-
-      h1 {
-        margin: 0 0 18px;
-        font-size: clamp(52px, 8vw, 112px);
-        line-height: 0.9;
-        letter-spacing: 0;
-      }
-
-      p {
-        max-width: 680px;
-        margin: 0 0 28px;
-        color: #cdd7c8;
-        font-size: 20px;
-        line-height: 1.55;
-      }
-
-      code {
-        display: block;
-        width: fit-content;
-        max-width: 100%;
-        padding: 14px 16px;
-        border: 1px solid rgba(245, 247, 241, 0.14);
-        border-radius: 8px;
-        background: rgba(0, 0, 0, 0.35);
-        color: #e7d68b;
-        overflow-wrap: anywhere;
-      }
-
-      .links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 14px;
-        margin-top: 28px;
+          linear-gradient(180deg, rgba(255, 255, 255, 0.055), transparent 22rem),
+          linear-gradient(135deg, rgba(141, 173, 127, 0.12), transparent 24rem),
+          var(--bg);
       }
 
       a {
-        color: #f5f7f1;
+        color: inherit;
         text-decoration: none;
-        border-bottom: 1px solid rgba(245, 247, 241, 0.45);
       }
 
-      @media (max-width: 760px) {
-        main {
+      .wrap {
+        width: min(1160px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-bottom: 1px solid var(--line);
+        background: rgba(5, 6, 8, 0.82);
+        backdrop-filter: blur(18px);
+      }
+
+      nav {
+        height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 760;
+        font-size: 18px;
+      }
+
+      .brand img {
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .nav-links a:hover {
+        color: var(--text);
+      }
+
+      .hero {
+        min-height: calc(100vh - 72px);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 420px;
+        align-items: center;
+        gap: 58px;
+        padding: 78px 0 54px;
+      }
+
+      .hero-logo {
+        width: min(176px, 42vw);
+        height: auto;
+        margin-bottom: 28px;
+      }
+
+      h1 {
+        margin: 0;
+        max-width: 780px;
+        font-size: clamp(48px, 7vw, 92px);
+        line-height: 0.95;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        margin: 28px 0 0;
+        max-width: 680px;
+        color: var(--soft);
+        font-size: 20px;
+        line-height: 1.6;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 32px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 18px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        font-weight: 680;
+        font-size: 14px;
+      }
+
+      .button.primary {
+        background: var(--text);
+        color: #050608;
+      }
+
+      .button.secondary {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .terminal {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+        box-shadow: 0 24px 90px rgba(0, 0, 0, 0.36);
+        overflow: hidden;
+      }
+
+      .terminal-bar {
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 14px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .dots {
+        display: flex;
+        gap: 7px;
+      }
+
+      .dots span {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #4b515c;
+      }
+
+      pre {
+        margin: 0;
+        padding: 22px;
+        white-space: pre-wrap;
+        color: #eef1e9;
+        font-size: 14px;
+        line-height: 1.75;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      section {
+        padding: 76px 0;
+        border-top: 1px solid var(--line);
+      }
+
+      h2 {
+        margin: 0 0 16px;
+        font-size: clamp(32px, 4vw, 52px);
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .section-copy {
+        max-width: 760px;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.65;
+        margin: 0 0 34px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        padding: 22px;
+      }
+
+      .card h3 {
+        margin: 0 0 12px;
+        font-size: 18px;
+      }
+
+      .card p,
+      .card li {
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .card p {
+        margin: 0;
+      }
+
+      .install-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .code-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        overflow: hidden;
+      }
+
+      .code-card h3 {
+        margin: 0;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--line);
+        font-size: 15px;
+      }
+
+      .logo-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 30px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.035);
+        padding: 28px;
+      }
+
+      .logo-strip img {
+        width: 104px;
+        height: auto;
+        flex: 0 0 auto;
+      }
+
+      .footer {
+        padding: 34px 0 48px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .footer .wrap {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        border-top: 1px solid var(--line);
+        padding-top: 24px;
+      }
+
+      @media (max-width: 900px) {
+        .hero,
+        .grid,
+        .install-grid {
           grid-template-columns: 1fr;
+        }
+
+        .hero {
+          padding-top: 48px;
           gap: 32px;
-          align-content: center;
+        }
+
+        .nav-links {
+          gap: 14px;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .wrap {
+          width: min(100% - 28px, 1160px);
+        }
+
+        nav {
+          height: auto;
+          padding: 16px 0;
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .nav-links {
+          width: 100%;
+          flex-wrap: wrap;
+        }
+
+        pre {
+          font-size: 12px;
+        }
+
+        .logo-strip,
+        .footer .wrap {
+          align-items: flex-start;
+          flex-direction: column;
         }
       }
     </style>
   </head>
   <body>
-    <main>
-      <img src="/logo.png" alt="KLAW logo">
-      <section>
-        <h1>KLAW</h1>
-        <p>A local-first AI runtime for transparent coding agents. Plan with a model, write real files, run real shell commands, and keep the whole loop visible in your terminal.</p>
-        <code>npm install -g @phartmann80/klaw</code>
-        <div class="links">
-          <a href="https://www.npmjs.com/package/@phartmann80/klaw">npm</a>
+    <header>
+      <nav class="wrap">
+        <a class="brand" href="https://klaw.at">
+          <img src="/logo.png" alt="KLAW logo">
+          <span>KLAW</span>
+        </a>
+        <div class="nav-links">
+          <a href="#install">Install</a>
+          <a href="#runtime">Runtime</a>
           <a href="https://github.com/janpaul80/klaw">GitHub</a>
+          <a href="https://www.npmjs.com/package/@phartmann80/klaw">npm</a>
+          <a href="https://klaw.at">klaw.at</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <div class="wrap hero">
+        <div>
+          <img class="hero-logo" src="/logo.png" alt="KLAW logo">
+          <h1>Local AI agents, visible in your terminal.</h1>
+          <p class="lead">KLAW is an early local-first AI runtime for developers who want the plan, file writes, shell commands, output, and failures to stay visible. No SaaS dashboard. No fake success. Just a small CLI you can inspect, fork, and run locally.</p>
+          <div class="actions">
+            <a class="button primary" href="https://www.npmjs.com/package/@phartmann80/klaw">npm install</a>
+            <a class="button secondary" href="https://github.com/janpaul80/klaw">View on GitHub</a>
+          </div>
+        </div>
+
+        <div class="terminal" aria-label="KLAW terminal example">
+          <div class="terminal-bar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <span>klaw.at</span>
+          </div>
+          <pre><span class="muted">$</span> npm install -g @phartmann80/klaw
+<span class="muted">$</span> klaw init
+<span class="muted">$</span> klaw doctor
+<span class="muted">$</span> klaw run "build a simple Next.js landing page"
+
+[KLAW][ARCHITECT] Planning task
+[KLAW][WRITER] Wrote package.json
+[KLAW][SHELL] Command requested: npm install
+[KLAW][SYSTEM] Workspace: ~/.klaw/workspaces/...</pre>
+        </div>
+      </div>
+
+      <section id="install">
+        <div class="wrap">
+          <h2>Install on your machine.</h2>
+          <p class="section-copy">KLAW runs through Node and npm. Configure your own provider key, then keep generated work inside a local workspace.</p>
+          <div class="install-grid">
+            <div class="code-card">
+              <h3>Windows PowerShell</h3>
+              <pre>node --version
+npm --version
+npm install -g @phartmann80/klaw
+$env:OPENAI_API_KEY="your_openai_api_key"
+klaw doctor
+klaw init</pre>
+            </div>
+            <div class="code-card">
+              <h3>WSL / Linux</h3>
+              <pre>node --version
+npm --version
+npm install -g @phartmann80/klaw
+export OPENAI_API_KEY="your_openai_api_key"
+klaw doctor
+klaw init</pre>
+            </div>
+            <div class="code-card">
+              <h3>macOS</h3>
+              <pre>node --version
+npm --version
+npm install -g @phartmann80/klaw
+export OPENAI_API_KEY="your_openai_api_key"
+klaw doctor
+klaw init</pre>
+            </div>
+            <div class="code-card">
+              <h3>Run with a workspace</h3>
+              <pre>klaw run "build a landing page"
+klaw run "build a landing page" --workspace ./my-app
+
+Default:
+~/.klaw/workspaces</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="runtime">
+        <div class="wrap">
+          <h2>A small runtime, not a platform.</h2>
+          <p class="section-copy">KLAW v0.2.0 is about making the first loop real: provider-backed planning, generated file contents, real shell commands, honest error capture, and one basic repair attempt.</p>
+          <div class="grid">
+            <div class="card">
+              <h3>Architect</h3>
+              <p>Asks the configured provider for a structured JSON plan before work begins.</p>
+            </div>
+            <div class="card">
+              <h3>Writer</h3>
+              <p>Generates complete file contents and blocks writes outside the selected workspace.</p>
+            </div>
+            <div class="card">
+              <h3>Shell</h3>
+              <p>Requests permission, streams stdout/stderr, captures exit codes, and reports failures.</p>
+            </div>
+            <div class="card">
+              <h3>Fixer</h3>
+              <p>For `npm install` or `npm run dev` failures, applies one provider-suggested repair and retries once.</p>
+            </div>
+            <div class="card">
+              <h3>Memory</h3>
+              <p>Keeps short execution history under `~/.klaw` so runs can be inspected later.</p>
+            </div>
+            <div class="card">
+              <h3>Provider</h3>
+              <p>Starts with OpenAI via `OPENAI_API_KEY`; Ollama and other providers can follow later.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <div class="logo-strip">
+            <img src="/logo.png" alt="KLAW logo">
+            <div>
+              <h2>Honest by design.</h2>
+              <p class="section-copy">KLAW should not fake success, skip installs, pretend a server is running, or hide stderr. If something fails, the terminal should say so.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="wrap">
+          <h2>Known limitations.</h2>
+          <p class="section-copy">This is an early runtime, not production-ready autonomous engineering software.</p>
+          <div class="grid">
+            <div class="card"><p>OpenAI is the first real provider. More providers come later.</p></div>
+            <div class="card"><p>The repair loop is simple and intentionally retries once.</p></div>
+            <div class="card"><p>KLAW is not a secure sandbox for untrusted code.</p></div>
+          </div>
         </div>
       </section>
     </main>
+
+    <footer class="footer">
+      <div class="wrap">
+        <span>KLAW - local-first AI agent CLI</span>
+        <span><a href="https://klaw.at">klaw.at</a> · <a href="https://github.com/janpaul80/klaw">GitHub</a> · <a href="https://www.npmjs.com/package/@phartmann80/klaw">npm</a></span>
+      </div>
+    </footer>
   </body>
 </html>
