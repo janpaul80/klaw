@@ -1,0 +1,7 @@
+ffmpeg/
+node_modules/
+klaw-workspace/
+memory.md
+*.bak
+.git/
+tests/

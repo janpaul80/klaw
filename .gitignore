@@ -9,6 +9,7 @@ yarn-error.log*
 .idea/
 .vscode/
 klaw-workspace/
+ffmpeg/
 *.tgz
 memory.md
 *.bak

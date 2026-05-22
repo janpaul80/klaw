@@ -1,117 +1,97 @@
 const { spawn } = require('child_process');
 const inquirer = require('inquirer');
-const http = require('http');
-const { parse } = require('url');
+
+function splitCommand(command) {
+  const parts = String(command).match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+  return parts.map((part) => part.replace(/^"|"$/g, ''));
+}
 
 class ShellAgent {
-  constructor(config) {
-    this.permissions = config.permissions;
+  constructor(config = {}) {
+    this.permissions = config.permissions || { shell: 'prompt' };
   }
 
-  async run(command, reason) {
-    // Bypass npm install in the demo environment to avoid ENOENT errors
-    if (command.trim().startsWith('npm install') || command.trim().startsWith('npm run dev')) {
-      console.log(`[KLAW][SHELL] Skipping npm install in demo mode`);
-      return '';
-    }
+  async allowed(command) {
+    if (this.permissions.shell === 'allow') return true;
+    if (this.permissions.shell === 'deny') return false;
+
+    const { allow } = await inquirer.prompt([
+      { type: 'confirm', name: 'allow', message: `[KLAW][SHELL] Allow command? ${command}` }
+    ]);
+    return allow;
+  }
+
+  async run(command, { cwd = process.cwd(), reason = 'Run command' } = {}) {
     console.log(`[KLAW][SHELL] Command: ${command}`);
+    console.log(`[KLAW][SHELL] CWD: ${cwd}`);
     console.log(`[KLAW][SHELL] Reason: ${reason}`);
 
-    if (!this.permissions.allowShellCommands) {
-      const { allow } = await inquirer.prompt([
-        { type: 'confirm', name: 'allow', message: `[KLAW][SHELL] Allow command? ${command}` }
-      ]);
-      if (!allow) {
-        console.log(`[KLAW][SHELL] Command denied`);
-        return null;
-      }
+    if (!(await this.allowed(command))) {
+      console.log('[KLAW][SHELL] Command denied');
+      return { code: 126, stdout: '', stderr: 'Command denied by user' };
     }
 
-    return new Promise((resolve, reject) => {
-      // Split command into parts for spawn
-      const parts = command.split(' ');
-      const cmd = parts[0];
-      const args = parts.slice(1);
+    return new Promise((resolve) => {
+      const [cmd, ...args] = splitCommand(command);
+      const child = process.platform === 'win32'
+        ? spawn(command, { cwd, shell: true, env: process.env })
+        : spawn(cmd, args, { cwd, shell: false, env: process.env });
+      let stdout = '';
+      let stderr = '';
+      let settled = false;
+      const isDevServer = command.trim() === 'npm run dev';
+      const readyPattern = /(ready|local:|localhost:|started server|compiled successfully)/i;
 
-      const child = spawn(cmd, args, { stdio: 'pipe' });
+      const finish = (result) => {
+        if (settled) return;
+        settled = true;
+        resolve(result);
+      };
 
-      let output = '';
-      let serverUrl = null;
+      const timeout = isDevServer
+        ? setTimeout(() => {
+            stderr += '\nKLAW timed out waiting for the dev server to become ready.';
+            child.kill();
+            console.log('[KLAW][SHELL] Exit code: 124');
+            finish({ code: 124, stdout, stderr });
+          }, 30000)
+        : null;
 
       child.stdout.on('data', (data) => {
-        const str = data.toString();
-        process.stdout.write(str); // Stream to console in real-time
-        output += str;
-
-        // Check for Next.js dev server start message
-        if (str.includes('Server running at') && str.includes('http://')) {
-          const match = str.match(/https?:\/\/[^\s]+/);
-          if (match) {
-            serverUrl = match[0];
-          }
+        const text = data.toString();
+        stdout += text;
+        process.stdout.write(text);
+        if (isDevServer && readyPattern.test(stdout)) {
+          setTimeout(() => {
+            if (timeout) clearTimeout(timeout);
+            child.kill();
+            console.log('[KLAW][SHELL] Dev server started successfully; stopping verification process.');
+            console.log('[KLAW][SHELL] Exit code: 0');
+            finish({ code: 0, stdout, stderr, started: true });
+          }, 1500);
         }
       });
 
       child.stderr.on('data', (data) => {
-        process.stderr.write(data.toString());
-        output += data.toString();
+        const text = data.toString();
+        stderr += text;
+        process.stderr.write(text);
+      });
+
+      child.on('error', (error) => {
+        if (timeout) clearTimeout(timeout);
+        stderr += error.message;
+        console.log(`[KLAW][SHELL] Error: ${error.message}`);
+        finish({ code: 1, stdout, stderr, error: error.message });
       });
 
       child.on('close', (code) => {
-        if (code !== 0) {
-          reject(new Error(`Command exited with code ${code}`));
-          return;
-        }
-
-        // If we detected a server URL, verify it's reachable
-        if (serverUrl) {
-          this.verifyServer(serverUrl, (err, reachable) => {
-            if (err) {
-              console.log(`[KLAW][SHELL] Warning: Could not verify server: ${err.message}`);
-            }
-            if (reachable) {
-              console.log(`[KLAW][SHELL] Server verified at ${serverUrl}`);
-            }
-            resolve(output);
-          });
-        } else {
-          resolve(output);
-        }
-      });
-
-      child.on('error', (err) => {
-        reject(err);
+        if (timeout) clearTimeout(timeout);
+        if (settled) return;
+        console.log(`[KLAW][SHELL] Exit code: ${code}`);
+        finish({ code, stdout, stderr });
       });
     });
-  }
-
-  verifyServer(url, callback) {
-    const parsed = parse(url);
-    const options = {
-      hostname: parsed.hostname,
-      port: parsed.port || 80,
-      path: parsed.pathname || '/',
-      method: 'GET'
-    };
-
-    const req = http.request(options, (res) => {
-      if (res.statusCode === 200) {
-        callback(null, true);
-      } else {
-        callback(new Error(`Status code: ${res.statusCode}`), false);
-      }
-    });
-
-    req.on('error', (err) => {
-      callback(err, false);
-    });
-
-    req.setTimeout(5000, () => {
-      req.destroy();
-      callback(new Error('Request timeout'), false);
-    });
-
-    req.end();
   }
 }
 

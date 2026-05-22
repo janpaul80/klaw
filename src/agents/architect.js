@@ -1,48 +1,35 @@
 const { appendMemory } = require('../memory');
 
 class ArchitectAgent {
-  constructor(task) {
-    this.task = task;
-    this.steps = [];
+  constructor(provider) {
+    this.provider = provider;
   }
 
-  analyze() {
-    const lower = this.task.toLowerCase();
-    this.steps = [];
+  async plan(task) {
+    console.log(`[KLAW][ARCHITECT] Planning: ${task}`);
+    const plan = await this.provider.generateJson({
+      system: [
+        'You are KLAW ArchitectAgent.',
+        'Return only JSON with this exact shape:',
+        '{"summary":"...","steps":[{"agent":"writer","task":"...","files":[]}]}',
+        'Keep plans practical for a local CLI runtime. Include file creation and shell setup steps when needed.'
+      ].join('\n'),
+      prompt: `User task: ${task}`
+    });
 
-    if (lower.includes('next.js') || lower.includes('next app') || lower.includes('landing page')) {
-      this.steps = [
-        'Create package.json with Next.js dependencies',
-        'Generate app structure (pages/api)',
-        'Install dependencies',
-        'Start development server'
-      ];
-    } else if (lower.includes('react') || lower.includes('component')) {
-      this.steps = [
-        'Create component file',
-        'Add to project structure',
-        'Install required packages'
-      ];
-    } else {
-      this.steps = [
-        'Analyze task requirements',
-        'Create necessary files',
-        'Install dependencies if needed',
-        'Set up project structure'
-      ];
+    if (!plan || typeof plan.summary !== 'string' || !Array.isArray(plan.steps)) {
+      throw new Error('ArchitectAgent returned an invalid plan shape');
     }
 
-    return this.steps;
-  }
+    for (const step of plan.steps) {
+      if (!step.agent || !step.task || !Array.isArray(step.files)) {
+        throw new Error('ArchitectAgent returned a step without agent, task, or files');
+      }
+    }
 
-  log(reasoning) {
-    console.log(`[KLAW][ARCHITECT] ${reasoning}`);
-    appendMemory('reasoning', `ArchitectAgent: ${reasoning}`);
-  }
-
-  delegate(agent, step) {
-    console.log(`[KLAW][ARCHITECT] Delegating to ${agent}: ${step}`);
-    appendMemory('action', `[${agent}] ${step}`);
+    console.log(`[KLAW][ARCHITECT] ${plan.summary}`);
+    appendMemory('plan', JSON.stringify(plan));
+    return plan;
   }
 }
 

@@ -1,93 +1,86 @@
-KLAW is a local-first AI runtime that executes developer tasks through transparent terminal-based agents.
-
-It can:
-- plan coding tasks
-- generate and modify files
-- run shell commands
-- manage lightweight workspace memory
-- retry failed steps
-- create isolated workspaces for experiments and projects
-
-The system is intentionally minimal:
-all actions are visible in the terminal, file writes are transparent, and workflows stay fully local without cloud lock-in.
-
-KLAW is designed for developers who want a hackable AI runtime instead of a closed SaaS coding platform.
-
-
-
 # KLAW
 
-Local AI runtime for agents, shell execution, memory, and bring-your-own-model workflows.
+KLAW is a local-first AI runtime for running transparent coding agents from your terminal.
+
+v0.2.0 turns the original demo CLI into a practical local runtime that can accept a task, ask a model for a structured plan, write real files into a workspace, run real shell commands, capture failures, and attempt one basic repair when `npm install` or `npm run dev` fails.
 
 ## Install
 
 ```bash
 npm install -g @phartmann80/klaw
+```
 
-Usage
-bash
-klaw doctor
+## Quick Start
+
+```bash
 klaw init
-klaw run "build a Next.js landing page"
+klaw doctor
+klaw run "build a simple Next.js landing page"
+```
 
-What it does
+Use a specific workspace:
 
-KLAW runs tasks through a simple agent chain.
+```bash
+klaw run "build a landing page" --workspace ./my-app
+```
 
-Architect: plans task steps
-Writer: creates and modifies files
-Shell: runs commands with permission prompts
-Fixer: handles basic errors and retries
-Current features
-Local-first execution
-Workspace isolation
-Shell permission prompts
-Live terminal output
-Human-readable memory log
-Minimal agent runtime
-Example output
-[KLAW][SYSTEM] Checking system status
-[KLAW][SYSTEM] CLI initialized
-[KLAW][ARCHITECT] Starting task: build a Next.js landing page
-[KLAW][WRITER] Created: package.json
-[KLAW][WRITER] Created: pages/index.js
-[KLAW][SYSTEM] Demo complete
-Philosophy
+By default, KLAW creates generated workspaces outside the repo:
 
-KLAW is built to stay small, transparent, and hackable.
+```text
+~/.klaw/workspaces
+```
 
-No dashboards
-No cloud lock-in
-No heavy orchestration layer
-Package
+## Configuration
 
-npm:
-https://www.npmjs.com/package/@phartmann80/klaw
+`klaw init` writes:
 
-GitHub:
-https://github.com/janpaul80/klaw
+```json
+{
+  "provider": "openai",
+  "model": "gpt-4.1-mini",
+  "workspaceRoot": "~/.klaw/workspaces",
+  "permissions": {
+    "shell": "prompt",
+    "fileWrite": true
+  }
+}
+```
 
+Set your API key before running provider-backed tasks:
 
-## Screenshots
+```bash
+set OPENAI_API_KEY=your_key_here
+```
 
-### System Check
+## Agent Flow
 
-![KLAW doctor](assets/klaw-doctor.jpg)
+- ArchitectAgent asks the configured provider for structured JSON plans.
+- WriterAgent asks the provider for structured file contents and writes them inside the workspace.
+- ShellAgent asks permission, runs commands for real, streams stdout/stderr, and returns exit codes.
+- FixerAgent captures `npm install` or `npm run dev` failures, asks the provider for a minimal file fix, applies it, and retries once.
 
-### Initialization
+## Doctor
 
-![KLAW init](assets/klaw-init.jpg)
+```bash
+klaw doctor
+```
 
-### Task Execution
+Checks Node, npm, Git, config, provider, API key availability, and workspace writability.
 
-![KLAW run](assets/klaw-run.jpg)
+## Project
 
-Author
+- npm: https://www.npmjs.com/package/@phartmann80/klaw
+- GitHub: https://github.com/janpaul80/klaw
+- Site: https://klaw.at
 
-Built by Paul Hartmann
+## Logo
 
-GitHub: @janpaul80
+The KLAW logo is available at `assets/logo.png` and `public/logo.png`.
 
-License
+## Philosophy
 
-MIT
+KLAW stays small, local, transparent, and hackable.
+
+No dashboards. No SaaS layer. No enterprise ceremony.
+
+Built by Paul Hartmann.
