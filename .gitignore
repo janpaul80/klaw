@@ -13,3 +13,5 @@ ffmpeg/
 *.tgz
 memory.md
 *.bak
+
+.vercel
