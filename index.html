@@ -367,7 +367,7 @@
           <h1>Local AI agents, visible in your terminal.</h1>
           <p class="lead">KLAW is an early local-first AI runtime for developers who want the plan, file writes, shell commands, output, and failures to stay visible. No SaaS dashboard. No fake success. Just a small CLI you can inspect, fork, and run locally.</p>
           <div class="actions">
-            <a class="button primary" href="https://www.npmjs.com/package/@phartmann80/klaw">npm install</a>
+            <a class="button primary" href="https://github.com/janpaul80/klaw">Install from GitHub</a>
             <a class="button secondary" href="https://github.com/janpaul80/klaw">View on GitHub</a>
           </div>
         </div>
@@ -377,7 +377,7 @@
             <div class="dots"><span></span><span></span><span></span></div>
             <span>klaw.at</span>
           </div>
-          <pre><span class="muted">$</span> npm install -g @phartmann80/klaw
+          <pre><span class="muted">$</span> npm install -g github:janpaul80/klaw#main
 <span class="muted">$</span> klaw init
 <span class="muted">$</span> klaw doctor
 <span class="muted">$</span> klaw run "build a simple Next.js landing page"
@@ -392,13 +392,13 @@
       <section id="install">
         <div class="wrap">
           <h2>Install on your machine.</h2>
-          <p class="section-copy">KLAW runs through Node and npm. Configure your own provider key, then keep generated work inside a local workspace.</p>
+          <p class="section-copy">KLAW runs through Node and npm. Configure your own provider key, then keep generated work inside a local workspace. The npm package still serves 0.1.4 until v0.2 publish access is restored, so use the GitHub install for now.</p>
           <div class="install-grid">
             <div class="code-card">
               <h3>Windows PowerShell</h3>
               <pre>node --version
 npm --version
-npm install -g @phartmann80/klaw
+npm install -g github:janpaul80/klaw#main
 $env:OPENAI_API_KEY="your_openai_api_key"
 klaw doctor
 klaw init</pre>
@@ -407,7 +407,7 @@ klaw init</pre>
               <h3>WSL / Linux</h3>
               <pre>node --version
 npm --version
-npm install -g @phartmann80/klaw
+npm install -g github:janpaul80/klaw#main
 export OPENAI_API_KEY="your_openai_api_key"
 klaw doctor
 klaw init</pre>
@@ -416,7 +416,7 @@ klaw init</pre>
               <h3>macOS</h3>
               <pre>node --version
 npm --version
-npm install -g @phartmann80/klaw
+npm install -g github:janpaul80/klaw#main
 export OPENAI_API_KEY="your_openai_api_key"
 klaw doctor
 klaw init</pre>

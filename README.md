@@ -36,10 +36,17 @@ KLAW is not a cloud workspace, enterprise orchestrator, autonomous black box, or
 
 ## Install
 
-KLAW is published as:
+The current working v0.2 install path is GitHub:
 
 ```bash
-npm install -g @phartmann80/klaw
+npm install -g github:janpaul80/klaw#main
+```
+
+The npm package `@phartmann80/klaw` currently still points to the older `0.1.4` demo runtime until npm publishing access is restored. Do not use the npm registry install for v0.2 yet.
+
+```bash
+# Not yet for v0.2:
+# npm install -g @phartmann80/klaw
 ```
 
 ### Windows PowerShell
@@ -47,7 +54,7 @@ npm install -g @phartmann80/klaw
 ```powershell
 node --version
 npm --version
-npm install -g @phartmann80/klaw
+npm install -g github:janpaul80/klaw#main
 $env:OPENAI_API_KEY="your_openai_api_key"
 klaw doctor
 klaw init
@@ -65,7 +72,7 @@ To persist the API key for future PowerShell sessions:
 ```bash
 node --version
 npm --version
-npm install -g @phartmann80/klaw
+npm install -g github:janpaul80/klaw#main
 export OPENAI_API_KEY="your_openai_api_key"
 klaw doctor
 klaw init
@@ -84,7 +91,7 @@ source ~/.bashrc
 ```bash
 node --version
 npm --version
-npm install -g @phartmann80/klaw
+npm install -g github:janpaul80/klaw#main
 export OPENAI_API_KEY="your_openai_api_key"
 klaw doctor
 klaw init
@@ -241,7 +248,7 @@ KLAW v0.2.0 is still early.
 
 - Website: https://klaw.at
 - GitHub: https://github.com/janpaul80/klaw
-- npm: https://www.npmjs.com/package/@phartmann80/klaw
+- npm: https://www.npmjs.com/package/@phartmann80/klaw (`0.1.4` until v0.2 publish access is restored)
 
 ## License
 

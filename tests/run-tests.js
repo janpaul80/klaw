@@ -217,6 +217,8 @@ async function testPublicReadmeIsProfessionalAndPlatformSpecific() {
   assert.match(readme, /Linux/i);
   assert.match(readme, /Known limitations/i);
   assert.match(readme, /OPENAI_API_KEY/);
+  assert.match(readme, /npm install -g github:janpaul80\/klaw#main/);
+  assert.match(readme, /0\.1\.4/);
 }
 
 async function testLandingPageUsesRealLogoAndInstallSections() {
@@ -229,6 +231,8 @@ async function testLandingPageUsesRealLogoAndInstallSections() {
   assert.match(html, /macOS/);
   assert.match(html, /Linux/);
   assert.match(html, /Local AI agents, visible in your terminal/);
+  assert.match(html, /npm install -g github:janpaul80\/klaw#main/);
+  assert.match(html, /npm package still serves 0\.1\.4/);
 }
 
 async function testProviderMissingKeyFailsClearly() {
