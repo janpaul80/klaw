@@ -4,12 +4,16 @@ const path = require('path');
 
 function defaultConfig() {
   return {
+    version: '0.2.0',
     provider: 'openai',
     model: 'gpt-4.1-mini',
     workspaceRoot: '~/.klaw/workspaces',
     permissions: {
       shell: 'prompt',
       fileWrite: true
+    },
+    memory: {
+      enabled: true
     }
   };
 }
@@ -37,6 +41,10 @@ function readConfig() {
     permissions: {
       ...defaultConfig().permissions,
       ...(loaded.permissions || {})
+    },
+    memory: {
+      ...defaultConfig().memory,
+      ...(loaded.memory || {})
     }
   };
 }

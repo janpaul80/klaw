@@ -23,7 +23,7 @@ class OpenAIProvider {
 
   async generateJson({ system, prompt }) {
     if (!this.apiKey) {
-      throw new Error('OpenAI API key missing. Set OPENAI_API_KEY or add it to your environment before running KLAW.');
+      throw new Error('[KLAW][PROVIDER] Missing OPENAI_API_KEY. Set OPENAI_API_KEY before running provider-backed tasks.');
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {

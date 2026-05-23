@@ -3,5 +3,6 @@ node_modules/
 klaw-workspace/
 memory.md
 *.bak
+*.tgz
 .git/
 .vercel/

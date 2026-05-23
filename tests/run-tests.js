@@ -4,6 +4,7 @@ const os = require('os');
 const path = require('path');
 
 const { defaultConfig, expandHome, resolveWorkspace } = require('../src/config');
+const { OpenAIProvider } = require('../src/providers/openai');
 const ArchitectAgent = require('../src/agents/architect');
 const FileWriterAgent = require('../src/agents/writer');
 const ShellAgent = require('../src/agents/shell');
@@ -17,9 +18,11 @@ function tmpDir(name) {
 async function testConfigDefaults() {
   const config = defaultConfig();
   assert.strictEqual(config.provider, 'openai');
+  assert.strictEqual(config.version, '0.2.0');
   assert.strictEqual(config.model, 'gpt-4.1-mini');
   assert.strictEqual(config.workspaceRoot, '~/.klaw/workspaces');
   assert.deepStrictEqual(config.permissions, { shell: 'prompt', fileWrite: true });
+  assert.deepStrictEqual(config.memory, { enabled: true });
   assert.strictEqual(expandHome('~/.klaw/workspaces'), path.join(os.homedir(), '.klaw', 'workspaces'));
 }
 
@@ -153,6 +156,14 @@ async function testLandingPageUsesRealLogoAndInstallSections() {
   assert.match(html, /Local AI agents, visible in your terminal/);
 }
 
+async function testProviderMissingKeyFailsClearly() {
+  const provider = new OpenAIProvider({ apiKey: '', model: 'gpt-4.1-mini' });
+  await assert.rejects(
+    () => provider.generateJson({ system: 'Return JSON', prompt: '{}' }),
+    /\[KLAW\]\[PROVIDER\] Missing OPENAI_API_KEY/
+  );
+}
+
 async function main() {
   const tests = [
     testConfigDefaults,
@@ -163,7 +174,8 @@ async function main() {
     testFixerAppliesProviderPatchAndRetriesOnce,
     testRuntimeSuccessWithFakeProvider,
     testPublicReadmeIsProfessionalAndPlatformSpecific,
-    testLandingPageUsesRealLogoAndInstallSections
+    testLandingPageUsesRealLogoAndInstallSections,
+    testProviderMissingKeyFailsClearly
   ];
 
   for (const test of tests) {

@@ -73,6 +73,14 @@ program
   });
 
 program
+  .command('config')
+  .description('Show KLAW configuration')
+  .action(() => {
+    const config = readConfig();
+    console.log(JSON.stringify(config, null, 2));
+  });
+
+program
   .command('doctor')
   .description('Check KLAW system status')
   .action(() => {
