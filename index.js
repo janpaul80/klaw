@@ -6,8 +6,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { defaultConfig, writeConfig, readConfig, resolveWorkspace, expandHome, configPath } = require('./src/config');
+const { memoryPath } = require('./src/memory');
 const { createProvider } = require('./src/providers');
 const { executeTask } = require('./src/runtime');
+const packageJson = require('./package.json');
 
 const program = new Command();
 program.version('0.2.0');
@@ -20,6 +22,15 @@ function commandExists(command) {
   return result.status === 0;
 }
 
+function commandVersion(command) {
+  const { spawnSync } = require('child_process');
+  const result = process.platform === 'win32'
+    ? spawnSync('cmd.exe', ['/d', '/s', '/c', `${command} --version`], { encoding: 'utf8' })
+    : spawnSync(command, ['--version'], { shell: false, encoding: 'utf8' });
+  if (result.status !== 0) return null;
+  return String(result.stdout || result.stderr).trim().split(/\r?\n/)[0];
+}
+
 program
   .command('init')
   .description('Initialize KLAW configuration')
@@ -30,6 +41,10 @@ program
     console.log(chalk.blue('[KLAW][SYSTEM] Configuration created'));
     console.log(`[KLAW][SYSTEM] ${file}`);
     console.log(`[KLAW][SYSTEM] Workspace root: ${expandHome(config.workspaceRoot)}`);
+    console.log(`[KLAW][INIT] Provider: ${config.provider}`);
+    console.log(`[KLAW][INIT] Model: ${config.model}`);
+    console.log(`[KLAW][INIT] Shell permission: ${config.permissions.shell}`);
+    console.log('[KLAW][INIT] Next: set OPENAI_API_KEY, then run `klaw doctor` and `klaw run "build a simple Next.js landing page"`');
   });
 
 program
@@ -62,7 +77,7 @@ program
   .description('Show KLAW execution logs')
   .option('--lines <n>', 'Number of lines to show', '50')
   .action((options) => {
-    const logFile = path.join(process.cwd(), 'memory.md');
+    const logFile = memoryPath();
     if (!fs.existsSync(logFile)) {
       console.log(chalk.yellow('[KLAW][SYSTEM] No logs found. Run a task first.'));
       return;
@@ -87,14 +102,18 @@ program
     const config = readConfig();
     const workspaceRoot = expandHome(config.workspaceRoot);
     fs.mkdirSync(workspaceRoot, { recursive: true });
+    const npmVersion = commandVersion('npm');
+    const gitVersion = commandVersion('git');
 
     const checks = [
-      ['Node version', process.version, true],
-      ['npm installed', commandExists('npm') ? 'available' : 'missing', commandExists('npm')],
-      ['Git installed', commandExists('git') ? 'available' : 'missing', commandExists('git')],
+      ['Package', packageJson.version, true],
+      ['OS', `${os.platform()} ${os.release()} (${os.arch()})`, true],
+      ['Node', process.version, true],
+      ['npm', npmVersion || 'missing', Boolean(npmVersion)],
+      ['Git', gitVersion || 'missing', Boolean(gitVersion)],
       ['Config file', fs.existsSync(configPath()) ? configPath() : 'not created yet', fs.existsSync(configPath())],
       ['Provider', config.provider, config.provider === 'openai'],
-      ['API key', process.env.OPENAI_API_KEY ? 'OPENAI_API_KEY available' : 'OPENAI_API_KEY missing', Boolean(process.env.OPENAI_API_KEY)],
+      ['OPENAI_API_KEY', process.env.OPENAI_API_KEY ? 'available' : 'missing', Boolean(process.env.OPENAI_API_KEY)],
       ['Workspace writable', workspaceRoot, isWritable(workspaceRoot)]
     ];
 

@@ -23,7 +23,7 @@ class FileWriterAgent {
     this.config = config;
   }
 
-  async generateAndWrite(plan, task) {
+  async generateAndWrite(plan, task, step = null) {
     const files = await this.provider.generateJson({
       system: [
         'You are KLAW WriterAgent.',
@@ -31,7 +31,11 @@ class FileWriterAgent {
         'Generate complete file contents. Do not use placeholders.',
         'For Next.js apps, create a minimal runnable project with package.json, app/page.js or pages/index.js, and needed config/CSS.'
       ].join('\n'),
-      prompt: `Task: ${task}\nPlan JSON:\n${JSON.stringify(plan, null, 2)}`
+      prompt: [
+        `Task: ${task}`,
+        step ? `Current writer step:\n${JSON.stringify(step, null, 2)}` : '',
+        `Plan JSON:\n${JSON.stringify(plan, null, 2)}`
+      ].filter(Boolean).join('\n\n')
     });
 
     if (!Array.isArray(files)) {

@@ -1,21 +1,45 @@
 const fs = require('fs');
+const path = require('path');
+const { klawHome } = require('./config');
+
+function memoryPath() {
+  return path.join(klawHome(), 'memory.md');
+}
+
+function ensureMemoryFile(file = memoryPath()) {
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  if (!fs.existsSync(file)) {
+    fs.writeFileSync(file, '# KLAW Execution Log\n\n');
+  }
+}
 
 function appendMemory(type, content) {
-  const memoryFile = './memory.md';
+  const file = memoryPath();
   const timestamp = new Date().toISOString();
-
-  if (!fs.existsSync(memoryFile)) {
-    fs.writeFileSync(memoryFile, '# KLAW Execution Log\n\n');
-  }
-
-  const entry = `[${timestamp}] ${type.toUpperCase()}: ${content}\n\n`;
-  fs.appendFileSync(memoryFile, entry);
+  ensureMemoryFile(file);
+  const entry = `${timestamp} [${String(type).toUpperCase()}] ${content}\n`;
+  fs.appendFileSync(file, entry);
 }
 
 function appendMemoryBlock(block) {
-  const memoryFile = './memory.md';
-  const entry = `## ${block.title}\n\nAgent: ${block.agent}\nTime: ${block.timestamp}\n\nReasoning:\n${block.reasoning}\n\nActions:\n${block.actions}\n\n---\n\n`;
-  fs.appendFileSync(memoryFile, entry);
+  const file = memoryPath();
+  ensureMemoryFile(file);
+  const entry = [
+    `## ${block.title}`,
+    '',
+    `Agent: ${block.agent}`,
+    `Time: ${block.timestamp}`,
+    '',
+    'Reasoning:',
+    block.reasoning,
+    '',
+    'Actions:',
+    block.actions,
+    '',
+    '---',
+    ''
+  ].join('\n');
+  fs.appendFileSync(file, entry);
 }
 
-module.exports = { appendMemory, appendMemoryBlock };
+module.exports = { appendMemory, appendMemoryBlock, memoryPath };

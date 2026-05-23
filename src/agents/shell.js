@@ -21,7 +21,7 @@ class ShellAgent {
     return allow;
   }
 
-  async run(command, { cwd = process.cwd(), reason = 'Run command' } = {}) {
+  async run(command, { cwd = process.cwd(), reason = 'Run command', stream = true } = {}) {
     console.log(`[KLAW][SHELL] Command: ${command}`);
     console.log(`[KLAW][SHELL] CWD: ${cwd}`);
     console.log(`[KLAW][SHELL] Reason: ${reason}`);
@@ -60,7 +60,7 @@ class ShellAgent {
       child.stdout.on('data', (data) => {
         const text = data.toString();
         stdout += text;
-        process.stdout.write(text);
+        if (stream) process.stdout.write(text);
         if (isDevServer && readyPattern.test(stdout)) {
           setTimeout(() => {
             if (timeout) clearTimeout(timeout);
@@ -75,7 +75,7 @@ class ShellAgent {
       child.stderr.on('data', (data) => {
         const text = data.toString();
         stderr += text;
-        process.stderr.write(text);
+        if (stream) process.stderr.write(text);
       });
 
       child.on('error', (error) => {

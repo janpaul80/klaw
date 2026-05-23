@@ -19,7 +19,11 @@ function defaultConfig() {
 }
 
 function configPath() {
-  return path.join(os.homedir(), '.klaw', 'config.json');
+  return path.join(klawHome(), 'config.json');
+}
+
+function klawHome() {
+  return process.env.KLAW_HOME ? path.resolve(process.env.KLAW_HOME) : path.join(os.homedir(), '.klaw');
 }
 
 function expandHome(value) {
@@ -77,6 +81,7 @@ function resolveWorkspace(config, workspaceOption, task, cwd = process.cwd()) {
 module.exports = {
   defaultConfig,
   configPath,
+  klawHome,
   expandHome,
   readConfig,
   writeConfig,

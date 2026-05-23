@@ -10,21 +10,26 @@ async function executeTask(task, options = {}) {
   const config = options.config;
   const workspace = path.resolve(options.workspace);
   const provider = options.provider;
-  const commands = options.commands || ['npm install', 'npm run dev'];
 
   fs.mkdirSync(workspace, { recursive: true });
   console.log(`[KLAW][SYSTEM] Workspace: ${workspace}`);
-  appendMemory('task', `Received task: ${task}`);
+  if (config.memory?.enabled !== false) appendMemory('task', `Received task: ${task}`);
 
   const architect = new ArchitectAgent(provider);
-  const plan = await architect.plan(task);
+  const plan = await architect.plan(task, { workspace, config });
 
   const writer = new FileWriterAgent(workspace, provider, config);
-  const files = await writer.generateAndWrite(plan, task);
+  const files = [];
 
   const shell = new ShellAgent(config);
   const fixer = new FixerAgent(workspace, provider);
   const commandResults = [];
+  const commands = options.commands || collectPlanCommands(plan);
+
+  for (const step of plan.steps.filter((entry) => entry.agent === 'writer')) {
+    const written = await writer.generateAndWrite(plan, task, step);
+    files.push(...written);
+  }
 
   for (const command of commands) {
     const result = await shell.run(command, { cwd: workspace, reason: `Run ${command} for generated project` });
@@ -52,4 +57,10 @@ async function executeTask(task, options = {}) {
   return { status: 'completed', workspace, plan, files, commands: commandResults };
 }
 
-module.exports = { executeTask };
+function collectPlanCommands(plan) {
+  return plan.steps
+    .filter((step) => step.agent === 'shell')
+    .flatMap((step) => step.commands || []);
+}
+
+module.exports = { executeTask, collectPlanCommands };

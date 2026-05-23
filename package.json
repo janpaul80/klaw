@@ -3,11 +3,31 @@
   "version": "0.2.0",
   "description": "Local AI runtime for running agents with your own models and APIs",
   "main": "index.js",
+  "homepage": "https://klaw.at",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/janpaul80/klaw.git"
+  },
+  "bugs": {
+    "url": "https://github.com/janpaul80/klaw/issues"
+  },
   "bin": {
     "klaw": "index.js"
   },
   "scripts": {
-    "test": "node tests/run-tests.js"
+    "test": "node tests/run-tests.js",
+    "prepublishOnly": "npm test"
+  },
+  "files": [
+    "index.js",
+    "src/",
+    "README.md",
+    "LICENSE",
+    "assets/logo.png",
+    "public/logo.png"
+  ],
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "chalk": "^4.1.2",
