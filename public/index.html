@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>KLAW - Local AI agents, visible in your terminal</title>
-    <meta name="description" content="KLAW is a local-first AI runtime for transparent terminal-based coding agents.">
+    <title>KLAW - Local AI runtime for transparent agent execution</title>
+    <meta name="description" content="KLAW is a local-first AI runtime that helps developers execute tasks through transparent terminal-based agents.">
     <style>
       :root {
         color-scheme: dark;
@@ -283,6 +283,22 @@
         flex: 0 0 auto;
       }
 
+      .workflow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 24px 0;
+        font-size: 18px;
+        color: var(--muted);
+      }
+
+      .workflow .arrow {
+        color: var(--green);
+        font-size: 24px;
+      }
+
       .footer {
         padding: 34px 0 48px;
         color: var(--muted);
@@ -346,16 +362,16 @@
   <body>
     <header>
       <nav class="wrap">
-        <a class="brand" href="https://klaw.at">
+        <a class="brand" href="https://www.klaw.at/">
           <img src="/logo.png" alt="KLAW logo">
           <span>KLAW</span>
         </a>
         <div class="nav-links">
-          <a href="#install">Install</a>
-          <a href="#runtime">Runtime</a>
+          <a href="https://www.klaw.at/">Home</a>
+          <a href="#features">Features</a>
+          <a href="#providers">Providers</a>
+          <a href="#documentation">Documentation</a>
           <a href="https://github.com/janpaul80/klaw">GitHub</a>
-          <a href="https://www.npmjs.com/package/@phartmann80/klaw">npm</a>
-          <a href="https://klaw.at">klaw.at</a>
         </div>
       </nav>
     </header>
@@ -364,11 +380,12 @@
       <div class="wrap hero">
         <div>
           <img class="hero-logo" src="/logo.png" alt="KLAW logo">
-          <h1>Local AI agents, visible in your terminal.</h1>
-          <p class="lead">KLAW is an early local-first AI runtime for developers who want the plan, file writes, shell commands, output, and failures to stay visible. No SaaS dashboard. No fake success. Just a small CLI you can inspect, fork, and run locally.</p>
+          <h1>Local AI runtime for transparent agent execution.</h1>
+          <p class="lead">Run AI agents locally. Write files. Execute shell commands. Keep everything visible in your terminal.</p>
           <div class="actions">
-            <a class="button primary" href="https://github.com/janpaul80/klaw">Install from GitHub</a>
-            <a class="button secondary" href="https://github.com/janpaul80/klaw">View on GitHub</a>
+            <a class="button primary" href="https://www.klaw.at/">Get Started</a>
+            <a class="button secondary" href="https://github.com/janpaul80/klaw">View Source</a>
+            <a class="button secondary" href="https://www.npmjs.com/package/@phartmann80/klaw">Install from npm</a>
           </div>
         </div>
 
@@ -377,29 +394,108 @@
             <div class="dots"><span></span><span></span><span></span></div>
             <span>klaw.at</span>
           </div>
-          <pre><span class="muted">$</span> npm install -g github:janpaul80/klaw#main
+          <pre><span class="muted">$</span> npm install -g @phartmann80/klaw
 <span class="muted">$</span> klaw init
 <span class="muted">$</span> klaw doctor
-<span class="muted">$</span> klaw run "build a simple Next.js landing page"
+<span class="muted">$</span> klaw run "build a hello world script"
 
-[KLAW][ARCHITECT] Planning task
-[KLAW][WRITER] Wrote package.json
-[KLAW][SHELL] Command requested: npm install
-[KLAW][SYSTEM] Workspace: ~/.klaw/workspaces/...</pre>
+[KLAW][ARCHITECT] Planning: build a hello world script
+[KLAW][WRITER] Wrote: hello.js
+[KLAW][SHELL] Command: node hello.js
+Hello World
+[KLAW][SHELL] Exit code: 0
+[KLAW][SYSTEM] Completed</pre>
         </div>
       </div>
 
-      <section id="install">
+      <section id="what-is-klaw">
         <div class="wrap">
-          <h2>Install on your machine.</h2>
-          <p class="section-copy">KLAW runs through Node and npm. Configure your own provider key, then keep generated work inside a local workspace. The npm package still serves 0.1.4 until v0.2 publish access is restored, so use the GitHub install for now.</p>
+          <h2>What is KLAW?</h2>
+          <p class="section-copy">KLAW is a local-first AI runtime that helps developers execute tasks through transparent terminal-based agents. Instead of hiding decisions behind a cloud service, KLAW keeps planning, file creation, shell execution, and repair attempts visible and understandable.</p>
+        </div>
+      </section>
+
+      <section id="agent-workflow">
+        <div class="wrap">
+          <h2>Agent Workflow</h2>
+          <div class="workflow">
+            <span>User Prompt</span>
+            <span class="arrow">↓</span>
+            <span>Architect</span>
+            <span class="arrow">↓</span>
+            <span>Writer</span>
+            <span class="arrow">↓</span>
+            <span>Shell</span>
+            <span class="arrow">↓</span>
+            <span>Fixer</span>
+            <span class="arrow">↓</span>
+            <span>Workspace</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="features">
+        <div class="wrap">
+          <h2>Features</h2>
+          <div class="grid">
+            <div class="card">
+              <h3>Local-first execution</h3>
+              <p>Run AI agents entirely on your machine. No cloud dependency.</p>
+            </div>
+            <div class="card">
+              <h3>Transparent terminal logs</h3>
+              <p>Every step is visible in your terminal. No hidden state.</p>
+            </div>
+            <div class="card">
+              <h3>Real shell command execution</h3>
+              <p>Commands run for real. Exit codes are honest. Failures are reported.</p>
+            </div>
+            <div class="card">
+              <h3>Workspace isolation</h3>
+              <p>Projects stay in ~/.klaw/workspaces. File writes are sandboxed.</p>
+            </div>
+            <div class="card">
+              <h3>Memory logging</h3>
+              <p>Execution history is saved for later inspection.</p>
+            </div>
+            <div class="card">
+              <h3>Provider support</h3>
+              <p>Connect to OpenAI, OpenRouter, Ollama, Anthropic, Gemini, or Langdock.</p>
+            </div>
+            <div class="card">
+              <h3>Open-source</h3>
+              <p>MIT licensed. Inspect, fork, and extend freely.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="providers">
+        <div class="wrap">
+          <h2>Supported Providers</h2>
+          <p class="section-copy">KLAW supports multiple AI providers so you can choose your preferred model and deployment.</p>
+          <div class="grid">
+            <div class="card"><h3>OpenAI</h3><p>gpt-4.1-mini and more</p></div>
+            <div class="card"><h3>OpenRouter</h3><p>Unified API for multiple models</p></div>
+            <div class="card"><h3>Ollama</h3><p>Run models locally</p></div>
+            <div class="card"><h3>Anthropic</h3><p>Claude models</p></div>
+            <div class="card"><h3>Gemini</h3><p>Google models</p></div>
+            <div class="card"><h3>Langdock</h3><p>OpenAI-compatible API</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="installation">
+        <div class="wrap">
+          <h2>Installation</h2>
+          <p class="section-copy">Install KLAW via npm and configure your preferred provider.</p>
           <div class="install-grid">
             <div class="code-card">
               <h3>Windows PowerShell</h3>
               <pre>node --version
 npm --version
-npm install -g github:janpaul80/klaw#main
-$env:OPENAI_API_KEY="your_openai_api_key"
+npm install -g @phartmann80/klaw
+$env:OPENAI_API_KEY="your_key"
 klaw doctor
 klaw init</pre>
             </div>
@@ -407,8 +503,8 @@ klaw init</pre>
               <h3>WSL / Linux</h3>
               <pre>node --version
 npm --version
-npm install -g github:janpaul80/klaw#main
-export OPENAI_API_KEY="your_openai_api_key"
+npm install -g @phartmann80/klaw
+export OPENAI_API_KEY="your_key"
 klaw doctor
 klaw init</pre>
             </div>
@@ -416,76 +512,30 @@ klaw init</pre>
               <h3>macOS</h3>
               <pre>node --version
 npm --version
-npm install -g github:janpaul80/klaw#main
-export OPENAI_API_KEY="your_openai_api_key"
+npm install -g @phartmann80/klaw
+export OPENAI_API_KEY="your_key"
 klaw doctor
 klaw init</pre>
             </div>
             <div class="code-card">
-              <h3>Run with a workspace</h3>
-              <pre>klaw run "build a landing page"
+              <h3>Run a task</h3>
+              <pre>klaw run "create a hello script"
 klaw run "build a landing page" --workspace ./my-app
-
-Default:
-~/.klaw/workspaces</pre>
+klaw logs
+klaw doctor</pre>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="runtime">
+      <section id="documentation">
         <div class="wrap">
-          <h2>A small runtime, not a platform.</h2>
-          <p class="section-copy">KLAW v0.2.0 is about making the first loop real: provider-backed planning, generated file contents, real shell commands, honest error capture, and one basic repair attempt.</p>
+          <h2>Project Status</h2>
+          <p class="section-copy">KLAW is an active open-source project focused on building a practical local AI runtime for developers.</p>
           <div class="grid">
-            <div class="card">
-              <h3>Architect</h3>
-              <p>Asks the configured provider for a structured JSON plan before work begins.</p>
-            </div>
-            <div class="card">
-              <h3>Writer</h3>
-              <p>Generates complete file contents and blocks writes outside the selected workspace.</p>
-            </div>
-            <div class="card">
-              <h3>Shell</h3>
-              <p>Requests permission, streams stdout/stderr, captures exit codes, and reports failures.</p>
-            </div>
-            <div class="card">
-              <h3>Fixer</h3>
-              <p>For `npm install` or `npm run dev` failures, applies one provider-suggested repair and retries once.</p>
-            </div>
-            <div class="card">
-              <h3>Memory</h3>
-              <p>Keeps short execution history under `~/.klaw` so runs can be inspected later.</p>
-            </div>
-            <div class="card">
-              <h3>Provider</h3>
-              <p>Starts with OpenAI via `OPENAI_API_KEY`; Ollama and other providers can follow later.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="wrap">
-          <div class="logo-strip">
-            <img src="/logo.png" alt="KLAW logo">
-            <div>
-              <h2>Honest by design.</h2>
-              <p class="section-copy">KLAW should not fake success, skip installs, pretend a server is running, or hide stderr. If something fails, the terminal should say so.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <div class="wrap">
-          <h2>Known limitations.</h2>
-          <p class="section-copy">This is an early runtime, not production-ready autonomous engineering software.</p>
-          <div class="grid">
-            <div class="card"><p>OpenAI is the first real provider. More providers come later.</p></div>
-            <div class="card"><p>The repair loop is simple and intentionally retries once.</p></div>
-            <div class="card"><p>KLAW is not a secure sandbox for untrusted code.</p></div>
+            <div class="card"><h3>Current Release</h3><p>v0.2.0</p></div>
+            <div class="card"><h3>License</h3><p>MIT</p></div>
+            <div class="card"><h3>Repository</h3><p>janpaul80/klaw</p></div>
           </div>
         </div>
       </section>
@@ -493,8 +543,8 @@ Default:
 
     <footer class="footer">
       <div class="wrap">
-        <span>KLAW - local-first AI agent CLI</span>
-        <span><a href="https://klaw.at">klaw.at</a> · <a href="https://github.com/janpaul80/klaw">GitHub</a> · <a href="https://www.npmjs.com/package/@phartmann80/klaw">npm</a></span>
+        <span>KLAW - local-first AI runtime</span>
+        <span><a href="https://www.klaw.at/">klaw.at</a> · <a href="https://github.com/janpaul80/klaw">GitHub</a> · <a href="https://www.npmjs.com/package/@phartmann80/klaw">npm</a></span>
       </div>
     </footer>
   </body>

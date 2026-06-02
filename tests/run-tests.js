@@ -210,29 +210,29 @@ async function testMemoryUsesKlawHome() {
 async function testPublicReadmeIsProfessionalAndPlatformSpecific() {
   const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
   assert.match(readme, /(src="public\/logo\.png"|!\[KLAW logo\]\(public\/logo\.png\))/);
-  assert.match(readme, /https:\/\/klaw\.at/);
+  assert.match(readme, /https:\/\/www\.klaw\.at\//);
   assert.match(readme, /PowerShell/i);
   assert.match(readme, /WSL/i);
   assert.match(readme, /macOS/i);
   assert.match(readme, /Linux/i);
   assert.match(readme, /Known limitations/i);
   assert.match(readme, /OPENAI_API_KEY/);
-  assert.match(readme, /npm install -g github:janpaul80\/klaw#main/);
-  assert.match(readme, /0\.1\.4/);
+  assert.match(readme, /npm install -g @phartmann80\/klaw/);
+  assert.match(readme, /0\.2\./);
 }
 
 async function testLandingPageUsesRealLogoAndInstallSections() {
   const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
   assert.match(html, /src="\/logo\.png"/);
   assert.doesNotMatch(html, /generated logo/i);
-  assert.match(html, /https:\/\/klaw\.at/);
+  assert.match(html, /https:\/\/www\.klaw\.at\//);
   assert.match(html, /PowerShell/);
   assert.match(html, /WSL/);
   assert.match(html, /macOS/);
   assert.match(html, /Linux/);
-  assert.match(html, /Local AI agents, visible in your terminal/);
-  assert.match(html, /npm install -g github:janpaul80\/klaw#main/);
-  assert.match(html, /npm package still serves 0\.1\.4/);
+  assert.match(html, /Local AI runtime/);
+  assert.match(html, /npm install -g @phartmann80\/klaw/);
+  assert.match(html, /Get Started/);
 }
 
 async function testProviderMissingKeyFailsClearly() {
