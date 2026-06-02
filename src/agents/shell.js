@@ -39,8 +39,7 @@ class ShellAgent {
       let stdout = '';
       let stderr = '';
       let settled = false;
-      const isDevServer = command.trim() === 'npm run dev';
-      const readyPattern = /(ready|local:|localhost:|started server|compiled successfully)/i;
+      let detectedPorts = [];
 
       const finish = (result) => {
         if (settled) return;
@@ -48,28 +47,22 @@ class ShellAgent {
         resolve(result);
       };
 
-      const timeout = isDevServer
-        ? setTimeout(() => {
-            stderr += '\nKLAW timed out waiting for the dev server to become ready.';
-            child.kill();
-            console.log('[KLAW][SHELL] Exit code: 124');
-            finish({ code: 124, stdout, stderr });
-          }, 30000)
-        : null;
+      const portPattern = /localhost:(\d+)|127\.0\.0\.1:(\d+)|0\.0\.0\.0:(\d+)/gi;
+      const detectPorts = (text) => {
+        const ports = [];
+        let match;
+        while ((match = portPattern.exec(text)) !== null) {
+          const port = match[1] || match[2] || match[3];
+          if (port && !ports.includes(port)) ports.push(port);
+        }
+        return ports;
+      };
 
       child.stdout.on('data', (data) => {
         const text = data.toString();
         stdout += text;
         if (stream) process.stdout.write(text);
-        if (isDevServer && readyPattern.test(stdout)) {
-          setTimeout(() => {
-            if (timeout) clearTimeout(timeout);
-            child.kill();
-            console.log('[KLAW][SHELL] Dev server started successfully; stopping verification process.');
-            console.log('[KLAW][SHELL] Exit code: 0');
-            finish({ code: 0, stdout, stderr, started: true });
-          }, 1500);
-        }
+        detectedPorts = [...new Set([...detectedPorts, ...detectPorts(text)])];
       });
 
       child.stderr.on('data', (data) => {
@@ -79,17 +72,15 @@ class ShellAgent {
       });
 
       child.on('error', (error) => {
-        if (timeout) clearTimeout(timeout);
         stderr += error.message;
         console.log(`[KLAW][SHELL] Error: ${error.message}`);
         finish({ code: 1, stdout, stderr, error: error.message });
       });
 
       child.on('close', (code) => {
-        if (timeout) clearTimeout(timeout);
         if (settled) return;
         console.log(`[KLAW][SHELL] Exit code: ${code}`);
-        finish({ code, stdout, stderr });
+        finish({ code, stdout, stderr, ports: detectedPorts });
       });
     });
   }

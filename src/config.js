@@ -7,7 +7,15 @@ function defaultConfig() {
     version: '0.2.0',
     provider: 'openai',
     model: 'gpt-4.1-mini',
+    baseUrl: '',
+    apiKey: '',
+    temperature: 0.2,
+    maxTokens: 0,
     workspaceRoot: '~/.klaw/workspaces',
+    fixer: {
+      enabled: true,
+      retries: 1
+    },
     permissions: {
       shell: 'prompt',
       fileWrite: true
@@ -42,6 +50,10 @@ function readConfig() {
   return {
     ...defaultConfig(),
     ...loaded,
+    fixer: {
+      ...defaultConfig().fixer,
+      ...(loaded.fixer || {})
+    },
     permissions: {
       ...defaultConfig().permissions,
       ...(loaded.permissions || {})

@@ -15,45 +15,44 @@ function extractJson(text) {
   }
 }
 
-class OpenAIProvider {
-  constructor({ apiKey = process.env.OPENAI_API_KEY, baseUrl, model = 'gpt-4.1-mini', temperature = 0.2, maxTokens } = {}) {
+class AnthropicProvider {
+  constructor({ apiKey = process.env.ANTHROPIC_API_KEY, baseUrl, model = 'claude-3-5-haiku-20241022', temperature = 0.2, maxTokens } = {}) {
     this.apiKey = apiKey;
-    this.baseUrl = baseUrl || 'https://api.openai.com/v1';
+    this.baseUrl = baseUrl || 'https://api.anthropic.com/v1';
     this.model = model;
     this.temperature = temperature;
-    this.maxTokens = maxTokens;
+    this.maxTokens = maxTokens || 4096;
   }
 
   async generateJson({ system, prompt }) {
     if (!this.apiKey) {
-      throw new Error('[KLAW][PROVIDER] Missing OPENAI_API_KEY. Set OPENAI_API_KEY or configure apiKey in config.');
+      throw new Error('[KLAW][PROVIDER] Missing ANTHROPIC_API_KEY. Set ANTHROPIC_API_KEY or configure apiKey in config.');
     }
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const response = await fetch(`${this.baseUrl}/messages`, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${this.apiKey}`,
+        'x-api-key': this.apiKey,
+        'anthropic-beta': 'max-tokens-3-5-2024-07-15',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         model: this.model,
         temperature: this.temperature,
         max_tokens: this.maxTokens,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: prompt }
-        ]
+        system,
+        messages: [{ role: 'user', content: prompt }]
       })
     });
 
     const body = await response.text();
     if (!response.ok) {
-      throw new Error(`OpenAI request failed (${response.status}): ${body}`);
+      throw new Error(`Anthropic request failed (${response.status}): ${body}`);
     }
 
     const payload = JSON.parse(body);
-    return extractJson(payload.choices?.[0]?.message?.content);
+    return extractJson(payload.content?.[0]?.text || '');
   }
 }
 
-module.exports = { OpenAIProvider, extractJson };
+module.exports = { AnthropicProvider };

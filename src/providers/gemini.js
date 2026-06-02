@@ -15,10 +15,10 @@ function extractJson(text) {
   }
 }
 
-class OpenAIProvider {
-  constructor({ apiKey = process.env.OPENAI_API_KEY, baseUrl, model = 'gpt-4.1-mini', temperature = 0.2, maxTokens } = {}) {
+class GeminiProvider {
+  constructor({ apiKey = process.env.GEMINI_API_KEY, baseUrl, model = 'gemini-2.0-flash', temperature = 0.2, maxTokens } = {}) {
     this.apiKey = apiKey;
-    this.baseUrl = baseUrl || 'https://api.openai.com/v1';
+    this.baseUrl = baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
     this.model = model;
     this.temperature = temperature;
     this.maxTokens = maxTokens;
@@ -26,34 +26,35 @@ class OpenAIProvider {
 
   async generateJson({ system, prompt }) {
     if (!this.apiKey) {
-      throw new Error('[KLAW][PROVIDER] Missing OPENAI_API_KEY. Set OPENAI_API_KEY or configure apiKey in config.');
+      throw new Error('[KLAW][PROVIDER] Missing GEMINI_API_KEY. Set GEMINI_API_KEY or configure apiKey in config.');
     }
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const contents = [
+      { role: 'user', parts: [{ text: system }] },
+      { role: 'user', parts: [{ text: prompt }] }
+    ];
+
+    const response = await fetch(`${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: this.model,
-        temperature: this.temperature,
-        max_tokens: this.maxTokens,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: prompt }
-        ]
+        contents,
+        generationConfig: {
+          temperature: this.temperature,
+          maxOutputTokens: this.maxTokens,
+          responseMimeType: 'application/json'
+        }
       })
     });
 
     const body = await response.text();
     if (!response.ok) {
-      throw new Error(`OpenAI request failed (${response.status}): ${body}`);
+      throw new Error(`Gemini request failed (${response.status}): ${body}`);
     }
 
     const payload = JSON.parse(body);
-    return extractJson(payload.choices?.[0]?.message?.content);
+    return extractJson(payload.candidates?.[0]?.content?.parts?.[0]?.text || '');
   }
 }
 
-module.exports = { OpenAIProvider, extractJson };
+module.exports = { GeminiProvider };

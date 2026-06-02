@@ -15,26 +15,18 @@ function extractJson(text) {
   }
 }
 
-class OpenAIProvider {
-  constructor({ apiKey = process.env.OPENAI_API_KEY, baseUrl, model = 'gpt-4.1-mini', temperature = 0.2, maxTokens } = {}) {
-    this.apiKey = apiKey;
-    this.baseUrl = baseUrl || 'https://api.openai.com/v1';
+class OllamaProvider {
+  constructor({ baseUrl = 'http://localhost:11434', model = 'llama3.2', temperature = 0.2, maxTokens } = {}) {
+    this.baseUrl = baseUrl;
     this.model = model;
     this.temperature = temperature;
     this.maxTokens = maxTokens;
   }
 
   async generateJson({ system, prompt }) {
-    if (!this.apiKey) {
-      throw new Error('[KLAW][PROVIDER] Missing OPENAI_API_KEY. Set OPENAI_API_KEY or configure apiKey in config.');
-    }
-
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const response = await fetch(`${this.baseUrl}/api/chat`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: this.model,
         temperature: this.temperature,
@@ -42,18 +34,19 @@ class OpenAIProvider {
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: prompt }
-        ]
+        ],
+        stream: false
       })
     });
 
     const body = await response.text();
     if (!response.ok) {
-      throw new Error(`OpenAI request failed (${response.status}): ${body}`);
+      throw new Error(`Ollama request failed (${response.status}): ${body}`);
     }
 
     const payload = JSON.parse(body);
-    return extractJson(payload.choices?.[0]?.message?.content);
+    return extractJson(payload.message?.content || '');
   }
 }
 
-module.exports = { OpenAIProvider, extractJson };
+module.exports = { OllamaProvider };

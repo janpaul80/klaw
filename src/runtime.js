@@ -31,11 +31,16 @@ async function executeTask(task, options = {}) {
     files.push(...written);
   }
 
+  let retryCount = 0;
+  const maxRetries = config.fixer?.retries ?? 1;
+  const fixerEnabled = config.fixer?.enabled !== false;
+
   for (const command of commands) {
     const result = await shell.run(command, { cwd: workspace, reason: `Run ${command} for generated project` });
     commandResults.push({ command, ...result });
 
-    if (result.code !== 0 && (command === 'npm install' || command === 'npm run dev')) {
+    if (result.code !== 0 && fixerEnabled && retryCount < maxRetries) {
+      retryCount++;
       const fixed = await fixer.fixAndRetry({
         command,
         error: result,
@@ -45,9 +50,10 @@ async function executeTask(task, options = {}) {
       });
       commandResults.push({ command, retry: true, ...fixed });
       if (fixed.code !== 0) {
-        console.log(`[KLAW][SYSTEM] Failed after one fixer retry: ${command}`);
+        console.log(`[KLAW][SYSTEM] Failed after fixer retry ${retryCount}/${maxRetries}: ${command}`);
         return { status: 'failed', workspace, plan, files, commands: commandResults };
       }
+      console.log(`[KLAW][SYSTEM] Fixed and succeeded on retry ${retryCount}`);
     } else if (result.code !== 0) {
       return { status: 'failed', workspace, plan, files, commands: commandResults };
     }

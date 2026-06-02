@@ -98,7 +98,7 @@ program
 program
   .command('doctor')
   .description('Check KLAW system status')
-  .action(() => {
+  .action(async () => {
     const config = readConfig();
     const workspaceRoot = expandHome(config.workspaceRoot);
     fs.mkdirSync(workspaceRoot, { recursive: true });
@@ -112,10 +112,35 @@ program
       ['npm', npmVersion || 'missing', Boolean(npmVersion)],
       ['Git', gitVersion || 'missing', Boolean(gitVersion)],
       ['Config file', fs.existsSync(configPath()) ? configPath() : 'not created yet', fs.existsSync(configPath())],
-      ['Provider', config.provider, config.provider === 'openai'],
-      ['OPENAI_API_KEY', process.env.OPENAI_API_KEY ? 'available' : 'missing', Boolean(process.env.OPENAI_API_KEY)],
-      ['Workspace writable', workspaceRoot, isWritable(workspaceRoot)]
+      ['Provider', config.provider, true],
+      ['Model', config.model || 'default', true]
     ];
+
+    const providerKeys = {
+      openai: 'OPENAI_API_KEY',
+      anthropic: 'ANTHROPIC_API_KEY',
+      langdock: 'LANGDOCK_API_KEY',
+      gemini: 'GEMINI_API_KEY',
+      ollama: 'local'
+    };
+
+    const apiKeyEnv = providerKeys[config.provider];
+    const apiKeyValue = process.env[apiKeyEnv] || config.apiKey;
+    checks.push([apiKeyEnv, apiKeyValue ? 'configured' : 'missing', Boolean(apiKeyValue)]);
+
+    if (config.provider === 'ollama') {
+      try {
+        const { spawnSync } = require('child_process');
+        const result = spawnSync('curl', ['-s', 'http://localhost:11434/api/tags'], { encoding: 'utf8', timeout: 3000 });
+        const ollamaOk = result.status === 0 && result.stdout.includes('models');
+        checks.push(['Ollama server', ollamaOk ? 'running' : 'not running', ollamaOk]);
+      } catch (_) {
+        checks.push(['Ollama server', 'not running', false]);
+      }
+    }
+
+    checks.push(['Workspace root', workspaceRoot, true]);
+    checks.push(['Workspace writable', isWritable(workspaceRoot), isWritable(workspaceRoot)]);
 
     console.log(chalk.blue('[KLAW][SYSTEM] Doctor'));
     for (const [label, value, ok] of checks) {

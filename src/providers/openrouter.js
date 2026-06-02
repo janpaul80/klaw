@@ -15,10 +15,10 @@ function extractJson(text) {
   }
 }
 
-class OpenAIProvider {
-  constructor({ apiKey = process.env.OPENAI_API_KEY, baseUrl, model = 'gpt-4.1-mini', temperature = 0.2, maxTokens } = {}) {
+class OpenRouterProvider {
+  constructor({ apiKey = process.env.OPENROUTER_API_KEY, baseUrl, model = 'openai/gpt-4.1-mini', temperature = 0.2, maxTokens } = {}) {
     this.apiKey = apiKey;
-    this.baseUrl = baseUrl || 'https://api.openai.com/v1';
+    this.baseUrl = baseUrl || 'https://openrouter.ai/api/v1';
     this.model = model;
     this.temperature = temperature;
     this.maxTokens = maxTokens;
@@ -26,14 +26,16 @@ class OpenAIProvider {
 
   async generateJson({ system, prompt }) {
     if (!this.apiKey) {
-      throw new Error('[KLAW][PROVIDER] Missing OPENAI_API_KEY. Set OPENAI_API_KEY or configure apiKey in config.');
+      throw new Error('[KLAW][PROVIDER] Missing OPENROUTER_API_KEY. Set OPENROUTER_API_KEY or configure apiKey in config.');
     }
 
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://klaw.at',
+        'X-Title': 'KLAW'
       },
       body: JSON.stringify({
         model: this.model,
@@ -48,7 +50,7 @@ class OpenAIProvider {
 
     const body = await response.text();
     if (!response.ok) {
-      throw new Error(`OpenAI request failed (${response.status}): ${body}`);
+      throw new Error(`OpenRouter request failed (${response.status}): ${body}`);
     }
 
     const payload = JSON.parse(body);
@@ -56,4 +58,4 @@ class OpenAIProvider {
   }
 }
 
-module.exports = { OpenAIProvider, extractJson };
+module.exports = { OpenRouterProvider };
