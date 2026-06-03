@@ -17,10 +17,11 @@ function backupFile(filePath) {
 }
 
 class FileWriterAgent {
-  constructor(workspaceRoot, provider, config = {}) {
+  constructor(workspaceRoot, provider, config = {}, options = {}) {
     this.workspaceRoot = workspaceRoot;
     this.provider = provider;
     this.config = config;
+    this.nonInteractive = options.nonInteractive || false;
   }
 
   async generateAndWrite(plan, task, step = null) {
@@ -55,8 +56,15 @@ class FileWriterAgent {
   }
 
   write(filePath, content) {
+    // Check config permission (explicit false)
     if (this.config.permissions && this.config.permissions.fileWrite === false) {
       console.log(`[KLAW][WRITER] File writes disabled by config`);
+      return false;
+    }
+
+    // non-interactive mode: allow if permissions allow it, otherwise fail
+    if (this.nonInteractive && this.config.permissions?.fileWrite === false) {
+      console.log(`[KLAW][WRITER] File writes disabled in non-interactive mode`);
       return false;
     }
 

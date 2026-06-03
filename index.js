@@ -52,16 +52,22 @@ program
   .description('Execute a task via KLAW agents')
   .option('--provider <provider>', 'AI provider to use')
   .option('--workspace <path>', 'Workspace directory for this run')
-  .option('--yes', 'Allow shell commands without prompting')
+  .option('--yes', 'Approve shell commands and file writes without prompting')
+  .option('--ci', 'Fully non-interactive mode (no prompts, fails if approval required)')
   .action(async (task, options) => {
     try {
       const config = readConfig();
-      if (options.provider) config.provider = options.provider;
-      if (options.yes) config.permissions.shell = 'allow';
+      const nonInteractive = Boolean(options.ci);
+
+      // Handle --yes and --ci flags
+      if (options.yes || options.ci) {
+        config.permissions.shell = 'allow';
+        config.permissions.fileWrite = true;
+      }
 
       const workspace = resolveWorkspace(config, options.workspace, task);
       const provider = createProvider(config);
-      const result = await executeTask(task, { config, workspace, provider });
+      const result = await executeTask(task, { config, workspace, provider, nonInteractive });
 
       console.log(`[KLAW][SYSTEM] Status: ${result.status}`);
       console.log(`[KLAW][SYSTEM] Workspace path: ${result.workspace}`);

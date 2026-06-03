@@ -10,19 +10,20 @@ async function executeTask(task, options = {}) {
   const config = options.config;
   const workspace = path.resolve(options.workspace);
   const provider = options.provider;
+  const nonInteractive = options.nonInteractive || false;
 
   fs.mkdirSync(workspace, { recursive: true });
   console.log(`[KLAW][SYSTEM] Workspace: ${workspace}`);
+  console.log(`[KLAW][SYSTEM] Mode: ${nonInteractive ? 'non-interactive' : 'interactive'}`);
   if (config.memory?.enabled !== false) appendMemory('task', `Received task: ${task}`);
 
-  const architect = new ArchitectAgent(provider);
+  const architect = new ArchitectAgent(provider, config);
   const plan = await architect.plan(task, { workspace, config });
 
-  const writer = new FileWriterAgent(workspace, provider, config);
-  const files = [];
-
-  const shell = new ShellAgent(config);
+  const writer = new FileWriterAgent(workspace, provider, config, { nonInteractive });
+  const shell = new ShellAgent(config, { nonInteractive });
   const fixer = new FixerAgent(workspace, provider);
+  const files = [];
   const commandResults = [];
   const commands = options.commands || collectPlanCommands(plan);
 

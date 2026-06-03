@@ -1,5 +1,6 @@
 const { spawn } = require('child_process');
 const inquirer = require('inquirer');
+const { KlawError } = require('../errors/klaw-error');
 
 function splitCommand(command) {
   const parts = String(command).match(/(?:[^\s"]+|"[^"]*")+/g) || [];
@@ -7,14 +8,27 @@ function splitCommand(command) {
 }
 
 class ShellAgent {
-  constructor(config = {}) {
+  constructor(config = {}, options = {}) {
     this.permissions = config.permissions || { shell: 'prompt' };
+    this.nonInteractive = options.nonInteractive || false;
   }
 
   async allowed(command) {
+    // Explicit allow from config
     if (this.permissions.shell === 'allow') return true;
     if (this.permissions.shell === 'deny') return false;
 
+    // Non-interactive mode: never prompt, fail instead
+    if (this.nonInteractive) {
+      throw new KlawError({
+        code: 'PERMISSION_DENIED',
+        provider: 'shell',
+        stage: 'command',
+        message: `[KLAW][SHELL] Command requires approval in non-interactive mode: ${command}`
+      });
+    }
+
+    // Interactive mode: prompt user
     const { allow } = await inquirer.prompt([
       { type: 'confirm', name: 'allow', message: `[KLAW][SHELL] Allow command? ${command}` }
     ]);
@@ -26,7 +40,18 @@ class ShellAgent {
     console.log(`[KLAW][SHELL] CWD: ${cwd}`);
     console.log(`[KLAW][SHELL] Reason: ${reason}`);
 
-    if (!(await this.allowed(command))) {
+    let allowed = false;
+    try {
+      allowed = await this.allowed(command);
+    } catch (error) {
+      if (error.code === 'PERMISSION_DENIED') {
+        console.log(`[KLAW][SHELL] ${error.message}`);
+        return { code: 126, stdout: '', stderr: error.message };
+      }
+      throw error;
+    }
+
+    if (!allowed) {
       console.log('[KLAW][SHELL] Command denied');
       return { code: 126, stdout: '', stderr: 'Command denied by user' };
     }
