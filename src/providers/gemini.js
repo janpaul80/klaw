@@ -1,59 +1,97 @@
-function extractJson(text) {
-  const trimmed = String(text || '').trim();
-  if (!trimmed) throw new Error('Provider returned an empty response');
-  try {
-    return JSON.parse(trimmed);
-  } catch (_) {
-    const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-    if (fenced) return JSON.parse(fenced[1]);
-    const firstObject = trimmed.indexOf('{');
-    const firstArray = trimmed.indexOf('[');
-    const start = [firstObject, firstArray].filter((index) => index >= 0).sort((a, b) => a - b)[0];
-    if (start === undefined) throw new Error('Provider response did not contain JSON');
-    const end = trimmed[start] === '[' ? trimmed.lastIndexOf(']') : trimmed.lastIndexOf('}');
-    return JSON.parse(trimmed.slice(start, end + 1));
-  }
-}
+/**
+ * Gemini Provider
+ * Implements BaseProvider interface for Google Gemini API
+ */
 
-class GeminiProvider {
-  constructor({ apiKey = process.env.GEMINI_API_KEY, baseUrl, model = 'gemini-2.0-flash', temperature = 0.2, maxTokens } = {}) {
-    this.apiKey = apiKey;
-    this.baseUrl = baseUrl || 'https://generativelanguage.googleapis.com/v1beta';
-    this.model = model;
-    this.temperature = temperature;
-    this.maxTokens = maxTokens;
+const { BaseProvider } = require('./base');
+const { KlawError } = require('../errors/klaw-error');
+const { extractJson } = require('./utils');
+
+class GeminiProvider extends BaseProvider {
+  constructor(cfg = {}) {
+    const apiKey = cfg.apiKey || process.env.GEMINI_API_KEY;
+    super({
+      apiKey,
+      model: cfg.model || 'gemini-2.0-flash',
+      name: 'gemini',
+      baseUrl: cfg.baseUrl || 'https://generativelanguage.googleapis.com/v1beta'
+    });
+    this.temperature = cfg.temperature || 0.2;
+    this.maxTokens = cfg.maxTokens || 4000;
+  }
+
+  validateConfig() {
+    const errors = [];
+    if (!this.apiKey) errors.push('Missing GEMINI_API_KEY');
+    return { valid: errors.length === 0, errors };
+  }
+
+  async healthCheck() {
+    const { valid, errors } = this.validateConfig();
+    if (!valid) return { ok: false, message: errors.join(', ') };
+
+    try {
+      const res = await fetch(`${this.baseUrl}/models?key=${this.apiKey}`);
+      return { ok: res.ok, message: res.ok ? 'OK' : `HTTP ${res.status}` };
+    } catch (e) {
+      return { ok: false, message: e.message };
+    }
+  }
+
+  async complete(prompt, opts = {}) {
+    try {
+      const contents = [
+        { role: 'user', parts: [{ text: prompt }] }
+      ];
+      const response = await fetch(`${this.baseUrl}/models/${opts.model || this.model}:generateContent?key=${this.apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents,
+          generationConfig: {
+            temperature: opts.temperature || this.temperature,
+            maxOutputTokens: opts.maxTokens || this.maxTokens,
+            responseMimeType: 'application/json'
+          }
+        })
+      });
+
+      const body = await response.text();
+      if (!response.ok) {
+        throw new KlawError({
+          code: 'PROVIDER_ERROR',
+          provider: 'gemini',
+          stage: 'complete',
+          message: `HTTP ${response.status}: ${body}`
+        });
+      }
+
+      const payload = JSON.parse(body);
+      const text = payload.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        throw new KlawError({
+          code: 'EMPTY_RESPONSE',
+          provider: 'gemini',
+          stage: 'complete',
+          message: 'Provider returned empty response'
+        });
+      }
+      return text.trim();
+    } catch (err) {
+      if (err instanceof KlawError) throw err;
+      throw new KlawError({
+        code: 'PROVIDER_ERROR',
+        provider: 'gemini',
+        stage: 'complete',
+        message: err.message
+      });
+    }
   }
 
   async generateJson({ system, prompt }) {
-    if (!this.apiKey) {
-      throw new Error('[KLAW][PROVIDER] Missing GEMINI_API_KEY. Set GEMINI_API_KEY or configure apiKey in config.');
-    }
-
-    const contents = [
-      { role: 'user', parts: [{ text: system }] },
-      { role: 'user', parts: [{ text: prompt }] }
-    ];
-
-    const response = await fetch(`${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents,
-        generationConfig: {
-          temperature: this.temperature,
-          maxOutputTokens: this.maxTokens,
-          responseMimeType: 'application/json'
-        }
-      })
-    });
-
-    const body = await response.text();
-    if (!response.ok) {
-      throw new Error(`Gemini request failed (${response.status}): ${body}`);
-    }
-
-    const payload = JSON.parse(body);
-    return extractJson(payload.candidates?.[0]?.content?.parts?.[0]?.text || '');
+    const fullPrompt = system ? `${system}\n\n${prompt}` : prompt;
+    const result = await this.complete(fullPrompt);
+    return extractJson(result);
   }
 }
 

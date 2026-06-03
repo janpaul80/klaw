@@ -1,57 +1,124 @@
-function extractJson(text) {
-  const trimmed = String(text || '').trim();
-  if (!trimmed) throw new Error('Provider returned an empty response');
-  try {
-    return JSON.parse(trimmed);
-  } catch (_) {
-    const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-    if (fenced) return JSON.parse(fenced[1]);
-    const firstObject = trimmed.indexOf('{');
-    const firstArray = trimmed.indexOf('[');
-    const start = [firstObject, firstArray].filter((index) => index >= 0).sort((a, b) => a - b)[0];
-    if (start === undefined) throw new Error('Provider response did not contain JSON');
-    const end = trimmed[start] === '[' ? trimmed.lastIndexOf(']') : trimmed.lastIndexOf('}');
-    return JSON.parse(trimmed.slice(start, end + 1));
-  }
-}
+/**
+ * Anthropic Provider
+ * Implements BaseProvider interface for Anthropic API
+ */
 
-class AnthropicProvider {
-  constructor({ apiKey = process.env.ANTHROPIC_API_KEY, baseUrl, model = 'claude-3-5-haiku-20241022', temperature = 0.2, maxTokens } = {}) {
-    this.apiKey = apiKey;
-    this.baseUrl = baseUrl || 'https://api.anthropic.com/v1';
-    this.model = model;
-    this.temperature = temperature;
-    this.maxTokens = maxTokens || 4096;
+const { BaseProvider } = require('./base');
+const { KlawError } = require('../errors/klaw-error');
+const { extractJson } = require('./utils');
+
+class AnthropicProvider extends BaseProvider {
+  constructor(cfg = {}) {
+    const apiKey = cfg.apiKey || process.env.ANTHROPIC_API_KEY;
+    super({
+      apiKey,
+      model: cfg.model || 'claude-3-5-haiku-20241022',
+      name: 'anthropic',
+      baseUrl: cfg.baseUrl || 'https://api.anthropic.com/v1'
+    });
+    this.temperature = cfg.temperature || 0.2;
+    this.maxTokens = cfg.maxTokens || 4096;
+  }
+
+  validateConfig() {
+    const errors = [];
+    if (!this.apiKey) {
+      errors.push('Missing ANTHROPIC_API_KEY');
+    }
+    return { valid: errors.length === 0, errors };
+  }
+
+  async healthCheck() {
+    const { valid, errors } = this.validateConfig();
+    if (!valid) {
+      return { ok: false, message: errors.join(', ') };
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/messages`, {
+        method: 'POST',
+        headers: {
+          'x-api-key': this.apiKey,
+          'anthropic-beta': 'max-tokens-3-5-2024-07-15',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: this.model,
+          max_tokens: 1,
+          messages: [{ role: 'user', content: 'ping' }]
+        })
+      });
+
+      const body = await response.text();
+
+      if (!response.ok) {
+        return { ok: false, message: `HTTP ${response.status}: ${body}` };
+      }
+
+      return { ok: true, message: 'OK' };
+    } catch (e) {
+      return { ok: false, message: e.message };
+    }
+  }
+
+  async complete(prompt, opts = {}) {
+    try {
+      const response = await fetch(`${this.baseUrl}/messages`, {
+        method: 'POST',
+        headers: {
+          'x-api-key': this.apiKey,
+          'anthropic-beta': 'max-tokens-3-5-2024-07-15',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: opts.model || this.model,
+          temperature: opts.temperature || this.temperature,
+          max_tokens: opts.maxTokens || this.maxTokens,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+
+      const body = await response.text();
+
+      if (!response.ok) {
+        throw new KlawError({
+          code: 'PROVIDER_ERROR',
+          provider: 'anthropic',
+          stage: 'complete',
+          message: `HTTP ${response.status}: ${body}`
+        });
+      }
+
+      const payload = JSON.parse(body);
+      const content = payload.content?.[0]?.text;
+      if (!content) {
+        throw new KlawError({
+          code: 'EMPTY_RESPONSE',
+          provider: 'anthropic',
+          stage: 'complete',
+          message: 'Provider returned empty response'
+        });
+      }
+
+      return content.trim();
+    } catch (err) {
+      if (err instanceof KlawError) throw err;
+      throw new KlawError({
+        code: 'PROVIDER_ERROR',
+        provider: 'anthropic',
+        stage: 'complete',
+        message: err.message
+      });
+    }
   }
 
   async generateJson({ system, prompt }) {
-    if (!this.apiKey) {
-      throw new Error('[KLAW][PROVIDER] Missing ANTHROPIC_API_KEY. Set ANTHROPIC_API_KEY or configure apiKey in config.');
-    }
+    // Legacy method for backward compatibility
+    const fullPrompt = system ? `${system}\n\n${prompt}` : prompt;
+    const result = await this.complete(fullPrompt);
 
-    const response = await fetch(`${this.baseUrl}/messages`, {
-      method: 'POST',
-      headers: {
-        'x-api-key': this.apiKey,
-        'anthropic-beta': 'max-tokens-3-5-2024-07-15',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: this.model,
-        temperature: this.temperature,
-        max_tokens: this.maxTokens,
-        system,
-        messages: [{ role: 'user', content: prompt }]
-      })
-    });
-
-    const body = await response.text();
-    if (!response.ok) {
-      throw new Error(`Anthropic request failed (${response.status}): ${body}`);
-    }
-
-    const payload = JSON.parse(body);
-    return extractJson(payload.content?.[0]?.text || '');
+    // Use shared parser
+    return extractJson(result);
   }
 }
 

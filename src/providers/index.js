@@ -1,33 +1,50 @@
+/**
+ * Provider Factory
+ * Creates and validates provider instances
+ */
 const { OpenAIProvider } = require('./openai');
-const { OllamaProvider } = require('./ollama');
-const { AnthropicProvider } = require('./anthropic');
-const { LangdockProvider } = require('./langdock');
-const { GeminiProvider } = require('./gemini');
 const { OpenRouterProvider } = require('./openrouter');
+const { AnthropicProvider } = require('./anthropic');
+const { OllamaProvider } = require('./ollama');
+const { GeminiProvider } = require('./gemini');
+const { LangdockProvider } = require('./langdock');
+const { KlawError } = require('../errors/klaw-error');
 
-const PROVIDERS = {
+const providers = {
   openai: OpenAIProvider,
-  ollama: OllamaProvider,
+  openrouter: OpenRouterProvider,
   anthropic: AnthropicProvider,
-  langdock: LangdockProvider,
+  ollama: OllamaProvider,
   gemini: GeminiProvider,
-  openrouter: OpenRouterProvider
+  langdock: LangdockProvider
 };
 
 function createProvider(config) {
-  const providerName = config.provider || 'openai';
-  const ProviderClass = PROVIDERS[providerName];
-  if (!ProviderClass) {
-    const available = Object.keys(PROVIDERS).join(', ');
-    throw new Error(`Provider "${providerName}" not supported. Available: ${available}`);
+  const name = config.provider || 'openai';
+  const Provider = providers[name];
+
+  if (!Provider) {
+    throw new KlawError({
+      code: 'PROVIDER_CONFIG_ERROR',
+      provider: name,
+      stage: 'factory',
+      message: `Unknown provider: ${name}. Available: ${Object.keys(providers).join(', ')}`
+    });
   }
-  return new ProviderClass({
-    apiKey: config.apiKey,
-    baseUrl: config.baseUrl,
-    model: config.model,
-    temperature: config.temperature,
-    maxTokens: config.maxTokens
-  });
+
+  const instance = new Provider(config);
+  const validation = instance.validateConfig();
+
+  if (!validation.valid) {
+    throw new KlawError({
+      code: 'PROVIDER_CONFIG_ERROR',
+      provider: name,
+      stage: 'factory',
+      message: `Invalid configuration: ${validation.errors.join(', ')}`
+    });
+  }
+
+  return instance;
 }
 
-module.exports = { createProvider, PROVIDERS };
+module.exports = { createProvider, providers };
