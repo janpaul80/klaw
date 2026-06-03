@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-06-03T22:45:03.681Z",
+  "benchmarks": [
+    {
+      "name": "nextjs",
+      "prompt": "\"Create a Next.js landing page with a hero section, features, and footer\"",
+      "workspace": "C:\\Users\\hartm\\.klaw\\workspaces\\2026-06-03T20-19-45-187Z-test",
+      "provider": "openai",
+      "filesFound": [],
+      "checksPassed": [],
+      "checksFailed": [
+        "package.json missing"
+      ],
+      "result": "fail"
+    },
+    {
+      "name": "express",
+      "prompt": "\"Create a simple Express API with GET /users and POST /users\"",
+      "workspace": "C:\\Users\\hartm\\.klaw\\workspaces\\2026-06-03T20-19-45-187Z-test",
+      "provider": "openai",
+      "filesFound": [],
+      "checksPassed": [],
+      "checksFailed": [
+        "package.json missing"
+      ],
+      "result": "fail"
+    },
+    {
+      "name": "react",
+      "prompt": "\"Create a React dashboard with a counter component\"",
+      "workspace": "C:\\Users\\hartm\\.klaw\\workspaces\\2026-06-03T20-19-45-187Z-test",
+      "provider": "openai",
+      "filesFound": [],
+      "checksPassed": [],
+      "checksFailed": [
+        "package.json missing"
+      ],
+      "result": "fail"
+    },
+    {
+      "name": "cli",
+      "prompt": "\"Create a CLI tool that logs 'Hello [name]' when run\"",
+      "workspace": "C:\\Users\\hartm\\.klaw\\workspaces\\2026-06-03T20-19-45-187Z-test",
+      "provider": "openai",
+      "filesFound": [],
+      "checksPassed": [],
+      "checksFailed": [
+        "package.json missing"
+      ],
+      "result": "fail"
+    }
+  ]
+}
