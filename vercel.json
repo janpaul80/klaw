@@ -5,6 +5,10 @@
     {
       "source": "/logo.png",
       "destination": "/public/logo.png"
+    },
+    {
+      "source": "/kuikchat-hero.mp4",
+      "destination": "/public/kuikchat-hero.mp4"
     }
   ]
 }

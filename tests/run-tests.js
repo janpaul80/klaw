@@ -224,6 +224,8 @@ async function testPublicReadmeIsProfessionalAndPlatformSpecific() {
 async function testLandingPageUsesRealLogoAndInstallSections() {
   const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
   assert.match(html, /src="\/logo\.png"/);
+  assert.match(html, /<video[^>]+src="\/kuikchat-hero\.mp4"/);
+  assert.doesNotMatch(html, /KLAW terminal example/);
   assert.doesNotMatch(html, /generated logo/i);
   assert.match(html, /https:\/\/www\.klaw\.at\//);
   assert.match(html, /PowerShell/);

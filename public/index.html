@@ -153,35 +153,20 @@
         background: rgba(255, 255, 255, 0.045);
       }
 
-      .terminal {
+      .hero-video-frame {
+        height: 360px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+        background: #050608;
         box-shadow: 0 24px 90px rgba(0, 0, 0, 0.36);
         overflow: hidden;
       }
 
-      .terminal-bar {
-        height: 42px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 14px;
-        border-bottom: 1px solid var(--line);
-        color: var(--muted);
-        font-size: 13px;
-      }
-
-      .dots {
-        display: flex;
-        gap: 7px;
-      }
-
-      .dots span {
-        width: 9px;
-        height: 9px;
-        border-radius: 50%;
-        background: #4b515c;
+      .hero-video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
 
       pre {
@@ -389,22 +374,8 @@
           </div>
         </div>
 
-        <div class="terminal" aria-label="KLAW terminal example">
-          <div class="terminal-bar">
-            <div class="dots"><span></span><span></span><span></span></div>
-            <span>klaw.at</span>
-          </div>
-          <pre><span class="muted">$</span> npm install -g @phartmann80/klaw
-<span class="muted">$</span> klaw init
-<span class="muted">$</span> klaw doctor
-<span class="muted">$</span> klaw run "build a hello world script"
-
-[KLAW][ARCHITECT] Planning: build a hello world script
-[KLAW][WRITER] Wrote: hello.js
-[KLAW][SHELL] Command: node hello.js
-Hello World
-[KLAW][SHELL] Exit code: 0
-[KLAW][SYSTEM] Completed</pre>
+        <div class="hero-video-frame" aria-label="KLAW product video">
+          <video class="hero-video" src="/kuikchat-hero.mp4" autoplay muted loop playsinline preload="metadata"></video>
         </div>
       </div>
 

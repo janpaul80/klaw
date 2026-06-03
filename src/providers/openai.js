@@ -8,7 +8,9 @@ const { KlawError } = require('../errors/klaw-error');
 
 class OpenAIProvider extends BaseProvider {
   constructor(cfg = {}) {
-    const apiKey = cfg.apiKey || process.env.OPENAI_API_KEY;
+    const apiKey = Object.prototype.hasOwnProperty.call(cfg, 'apiKey')
+      ? cfg.apiKey
+      : process.env.OPENAI_API_KEY;
     super({
       apiKey,
       model: cfg.model || 'gpt-4.1-mini',
@@ -21,7 +23,8 @@ class OpenAIProvider extends BaseProvider {
 
   validateConfig() {
     const errors = [];
-    if (!this.apiKey) {
+    const apiKey = String(this.apiKey || '').trim();
+    if (!apiKey || apiKey === 'undefined' || apiKey === 'null') {
       errors.push('Missing OPENAI_API_KEY');
     }
     return { valid: errors.length === 0, errors };
@@ -54,6 +57,16 @@ class OpenAIProvider extends BaseProvider {
 
   async complete(prompt, opts = {}) {
     try {
+      const { valid, errors } = this.validateConfig();
+      if (!valid) {
+        throw new KlawError({
+          code: 'MISSING_API_KEY',
+          provider: 'openai',
+          stage: 'complete',
+          message: `[KLAW][PROVIDER] ${errors.join(', ')}`
+        });
+      }
+
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {

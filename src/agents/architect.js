@@ -27,27 +27,48 @@ class ArchitectAgent {
 
   async plan(task, context = {}) {
     console.log(`[KLAW][ARCHITECT] Planning: ${task}`);
-    const rawResponse = await this.requestPlan(task, context);
-    const repaired = extractAndRepairJson(rawResponse);
+    let rawResponse = await this.requestPlan(task, context);
+    let lastError = null;
 
-    // A2.2: Log confidence metadata
-    console.log(`[KLAW][ARCHITECT] JSON extraction: passes=${repaired.passes}, repaired=${repaired.repaired}`);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const repaired = this.parsePlanResponse(rawResponse);
+      console.log(`[KLAW][ARCHITECT] JSON extraction: passes=${repaired.passes}, repaired=${repaired.repaired}`);
 
-    try {
-      return this.acceptPlan(repaired.result);
-    } catch (error) {
-      // A2.2: FAIL CLEANLY after repair attempt
-      console.log(`[KLAW][ARCHITECT] Plan validation failed: ${error.message}`);
-      throw new KlawError({
-        code: 'VALIDATION_ERROR',
-        provider: 'architect',
-        stage: 'plan',
-        message: error.message
-      });
+      try {
+        return this.acceptPlan(repaired.result);
+      } catch (error) {
+        lastError = error;
+        console.log(`[KLAW][ARCHITECT] Plan validation failed: ${error.message}`);
+
+        if (attempt === 0) {
+          rawResponse = await this.requestPlan(task, {
+            ...context,
+            planRepairError: error.message,
+            previousPlan: repaired.result || rawResponse
+          });
+        }
+      }
     }
+
+    throw new KlawError({
+      code: 'VALIDATION_ERROR',
+      provider: 'architect',
+      stage: 'plan',
+      message: lastError ? lastError.message : 'Invalid plan'
+    });
   }
 
   async requestPlan(task, context = {}) {
+    const repairPrompt = context.planRepairError
+      ? [
+          '',
+          'The previous plan failed validation.',
+          `Validation error: ${context.planRepairError}`,
+          `Previous plan: ${JSON.stringify(context.previousPlan || {}, null, 2)}`,
+          'Return one corrected JSON plan only.'
+        ].join('\n')
+      : '';
+
     return this.provider.generateJson({
       system: [
         'You are KLAW ArchitectAgent.',
@@ -59,9 +80,18 @@ class ArchitectAgent {
       prompt: [
         `User task: ${task}`,
         `Workspace: ${context.workspace || ''}`,
-        `Config: ${JSON.stringify(context.config || {}, null, 2)}`
+        `Config: ${JSON.stringify(context.config || {}, null, 2)}`,
+        repairPrompt
       ].join('\n\n')
     });
+  }
+
+  parsePlanResponse(rawResponse) {
+    if (rawResponse && typeof rawResponse === 'object') {
+      return { result: rawResponse, repaired: false, passes: 1 };
+    }
+
+    return extractAndRepairJson(rawResponse, { provider: 'architect', stage: 'plan' });
   }
 
   acceptPlan(plan) {
