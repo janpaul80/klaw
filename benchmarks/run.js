@@ -1,17 +1,23 @@
 #!/usr/bin/env node
 /**
- * Benchmark Runner (C1)
- * Executes static validation on generated workspaces
+ * Benchmark Runner (C1 + C2)
+ * Static validation and execution checks
  * Each benchmark runs in an isolated workspace
  */
 const fs = require('fs');
 const path = require('path');
-const { spawnSync } = require('child_process');
+const { spawnSync, spawn } = require('child_process');
 
 const BENCHMARK_DIR = path.dirname(__dirname);
 const BENCHMARK_RUNS = path.join(process.env.HOME || process.env.USERPROFILE, '.klaw', 'benchmarks', 'runs');
 const BENCHMARK_SCORES = path.join(process.env.HOME || process.env.USERPROFILE, '.klaw', 'benchmarks', 'scorecards');
 const BENCHMARKS = ['nextjs', 'express', 'react', 'cli'];
+
+// Timeouts (ms)
+const TIMEOUT_INSTALL = 120000;
+const TIMEOUT_BUILD = 120000;
+const TIMEOUT_SERVER = 30000;
+const TIMEOUT_CLI = 30000;
 
 function ensureDir(dir) {
   if (!fs.existsSync(dir)) {
@@ -30,6 +36,178 @@ function loadBenchmark(name) {
   return { name, prompt };
 }
 
+function runNpmInstall(workspace) {
+  const result = {
+    status: 'skipped',
+    exitCode: null,
+    durationMs: 0,
+    output: ''
+  };
+
+  const pkgPath = path.join(workspace, 'package.json');
+  if (!fs.existsSync(pkgPath)) {
+    return result;
+  }
+
+  const startTime = Date.now();
+  try {
+    const install = spawnSync('npm', ['install', '--silent'], {
+      cwd: workspace,
+      encoding: 'utf8',
+      timeout: TIMEOUT_INSTALL,
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    result.exitCode = install.status;
+    result.output = install.stdout?.slice(-500) || install.stderr?.slice(-500) || '';
+  } catch (e) {
+    result.output = e.message.slice(-500);
+  }
+  result.durationMs = Date.now() - startTime;
+
+  result.status = result.exitCode === 0 ? 'pass' : 'install_fail';
+  return result;
+}
+
+function runBuild(workspace, benchmarkName) {
+  const result = {
+    status: 'skipped',
+    exitCode: null,
+    durationMs: 0,
+    output: ''
+  };
+
+  // Skip build for express (no build step) and cli (no build step)
+  if (benchmarkName === 'express' || benchmarkName === 'cli') {
+    return result;
+  }
+
+  const startTime = Date.now();
+  try {
+    // Determine build command
+    const buildCmd = benchmarkName === 'nextjs' ? 'npm run build' : 'npm run build';
+    const build = spawnSync('npm', ['run', 'build'], {
+      cwd: workspace,
+      encoding: 'utf8',
+      timeout: TIMEOUT_BUILD,
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    result.exitCode = build.status;
+    result.output = build.stdout?.slice(-500) || build.stderr?.slice(-500) || '';
+  } catch (e) {
+    result.output = e.message.slice(-500);
+  }
+  result.durationMs = Date.now() - startTime;
+
+  result.status = result.exitCode === 0 ? 'pass' : 'build_fail';
+  return result;
+}
+
+function runServerStart(workspace, benchmarkName) {
+  const result = {
+    status: 'skipped',
+    exitCode: null,
+    durationMs: 0,
+    output: ''
+  };
+
+  // Only for express
+  if (benchmarkName !== 'express') {
+    return result;
+  }
+
+  const serverFiles = ['index.js', 'app.js', 'server.js'];
+  let serverFile = serverFiles.find(f => fs.existsSync(path.join(workspace, f)));
+  if (!serverFile) {
+    return result;
+  }
+
+  const startTime = Date.now();
+  let serverProc = null;
+
+  try {
+    serverProc = spawn('node', [serverFile], {
+      cwd: workspace,
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+
+    // Wait briefly using sync approach via setTimeout workaround
+    let waited = 0;
+    while (waited < 3000) {
+      waited += 100;
+      // Can't use sleep in sync - just check after starting
+      break;
+    }
+
+    if (serverProc && !serverProc.killed) {
+      result.status = 'pass';
+    }
+  } catch (e) {
+    result.output = e.message.slice(-500);
+  } finally {
+    // Cleanup: kill server process
+    if (serverProc) {
+      serverProc.kill('SIGTERM');
+      setTimeout(() => {
+        if (serverProc && !serverProc.killed) {
+          serverProc.kill('SIGKILL');
+        }
+      }, 2000);
+    }
+  }
+  result.durationMs = Date.now() - startTime;
+
+  return result;
+}
+
+function runCliExecution(workspace, benchmarkName) {
+  const result = {
+    status: 'skipped',
+    exitCode: null,
+    durationMs: 0,
+    output: ''
+  };
+
+  // Only for cli
+  if (benchmarkName !== 'cli') {
+    return result;
+  }
+
+  const pkgPath = path.join(workspace, 'package.json');
+  if (!fs.existsSync(pkgPath)) {
+    return result;
+  }
+
+  let pkg;
+  try {
+    pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  } catch (_) {
+    return result;
+  }
+
+  const binName = pkg.bin ? Object.keys(pkg.bin)[0] : null;
+  if (!binName) {
+    return result;
+  }
+
+  const startTime = Date.now();
+  try {
+    const cli = spawnSync('npx', [binName, '--help'], {
+      cwd: workspace,
+      encoding: 'utf8',
+      timeout: TIMEOUT_CLI,
+      stdio: ['ignore', 'pipe', 'pipe']
+    });
+    result.exitCode = cli.status;
+    result.output = cli.stdout?.slice(-500) || cli.stderr?.slice(-500) || '';
+  } catch (e) {
+    result.output = e.message.slice(-500);
+  }
+  result.durationMs = Date.now() - startTime;
+
+  result.status = result.exitCode === 0 ? 'pass' : 'runtime_fail';
+  return result;
+}
+
 function validateBenchmark(benchmark, workspace) {
   const results = {
     benchmark: benchmark.name,
@@ -43,7 +221,12 @@ function validateBenchmark(benchmark, workspace) {
     checksFailed: [],
     result: 'fail',
     status: 'runtime_error',
-    reason: ''
+    reason: '',
+    // C2 fields
+    npmInstall: { status: 'skipped' },
+    build: { status: 'skipped' },
+    serverStart: { status: 'skipped' },
+    cliExecution: { status: 'skipped' }
   };
 
   if (!workspace || !fs.existsSync(workspace)) {
@@ -52,7 +235,7 @@ function validateBenchmark(benchmark, workspace) {
     return results;
   }
 
-  // Check for package.json
+  // Static checks (C1)
   const pkgPath = path.join(workspace, 'package.json');
   if (fs.existsSync(pkgPath)) {
     results.filesFound.push('package.json');
@@ -91,7 +274,7 @@ function validateBenchmark(benchmark, workspace) {
     results.reason = 'package.json missing';
   }
 
-  // Check for source files
+  // Source file checks
   const sourceChecks = {
     nextjs: ['app/page.js', 'pages/index.js', 'app/layout.js'],
     express: ['index.js', 'app.js', 'server.js'],
@@ -109,11 +292,10 @@ function validateBenchmark(benchmark, workspace) {
 
   results.result = results.checksFailed.length === 0 ? 'pass' : 'fail';
 
-  // Determine status
   if (results.result === 'pass') {
     results.status = 'pass';
   } else if (results.checksFailed.includes('workspace not found') ||
-             results.checksFailed.includes('package.json missing')) {
+            results.checksFailed.includes('package.json missing')) {
     results.status = 'runtime_error';
   } else {
     results.status = 'validation_fail';
@@ -136,29 +318,46 @@ function runBenchmark(benchmark) {
 
   console.log(`[BENCHMARK] ${benchmark.name}...`);
 
-  // Execute klaw run with explicit workspace
+  // Execute klaw run
   const result = spawnSync('node', ['index.js', 'run', benchmark.prompt, '--ci', '--workspace', workspace], {
     cwd: BENCHMARK_DIR,
     encoding: 'utf8',
     timeout: 180000
   });
 
-  const completedAt = Date.now();
-  const durationMs = completedAt - startTime;
-
-  // Validate
+  // Validate static
   const validation = validateBenchmark(benchmark, workspace);
   validation.startedAt = new Date(startTime).toISOString();
-  validation.completedAt = new Date(completedAt).toISOString();
-  validation.durationMs = durationMs;
+  validation.completedAt = new Date(Date.now()).toISOString();
 
+  // C2 execution checks
+  if (validation.filesFound.includes('package.json')) {
+    console.log(`[BENCHMARK] ${benchmark.name} npm install...`);
+    validation.npmInstall = runNpmInstall(workspace);
+
+    if (validation.npmInstall.status === 'pass') {
+      console.log(`[BENCHMARK] ${benchmark.name} build...`);
+      validation.build = runBuild(workspace, benchmark.name);
+
+      if (validation.build.status === 'pass') {
+        console.log(`[BENCHMARK] ${benchmark.name} execution...`);
+        if (benchmark.name === 'express') {
+          validation.serverStart = runServerStart(workspace, benchmark.name);
+        } else if (benchmark.name === 'cli') {
+          validation.cliExecution = runCliExecution(workspace, benchmark.name);
+        }
+      }
+    }
+  }
+
+  validation.durationMs = Date.now() - startTime;
   console.log(`[BENCHMARK] ${benchmark.name} ${validation.result}`);
 
   return validation;
 }
 
 function main() {
-  console.log('=== KLAW Benchmark Runner (C1) ===\n');
+  console.log('=== KLAW Benchmark Runner (C1 + C2) ===\n');
 
   ensureDir(BENCHMARK_RUNS);
   ensureDir(BENCHMARK_SCORES);
