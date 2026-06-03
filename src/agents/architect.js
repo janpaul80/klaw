@@ -1,9 +1,10 @@
 const { appendMemory } = require('../memory');
 const { validatePlanSchema, normalizePlan } = require('./architect-schema');
+const { extractAndRepairJson } = require('../providers/json-repair');
 const { KlawError } = require('../errors/klaw-error');
 
 function validatePlan(plan) {
-  // A2.1: Use strict schema validation
+  // A2.1: Use strict schema validation (source of truth)
   const validation = validatePlanSchema(plan);
 
   if (!validation.valid) {
@@ -26,12 +27,16 @@ class ArchitectAgent {
 
   async plan(task, context = {}) {
     console.log(`[KLAW][ARCHITECT] Planning: ${task}`);
-    const first = await this.requestPlan(task, context);
+    const rawResponse = await this.requestPlan(task, context);
+    const repaired = extractAndRepairJson(rawResponse);
+
+    // A2.2: Log confidence metadata
+    console.log(`[KLAW][ARCHITECT] JSON extraction: passes=${repaired.passes}, repaired=${repaired.repaired}`);
 
     try {
-      return this.acceptPlan(first);
+      return this.acceptPlan(repaired.result);
     } catch (error) {
-      // A2.1: FAIL CLEANLY - do NOT attempt repair or retry
+      // A2.2: FAIL CLEANLY after repair attempt
       console.log(`[KLAW][ARCHITECT] Plan validation failed: ${error.message}`);
       throw new KlawError({
         code: 'VALIDATION_ERROR',
@@ -60,7 +65,7 @@ class ArchitectAgent {
   }
 
   acceptPlan(plan) {
-    // validatePlan() now throws KlawError on invalid input
+    // validatePlan() throws KlawError on invalid - validation is source of truth
     const normalized = validatePlan(plan);
     console.log(`[KLAW][ARCHITECT] ${normalized.summary}`);
     appendMemory('architect', `Planned ${normalized.steps.length} steps: ${normalized.summary}`);
