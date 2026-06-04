@@ -128,6 +128,27 @@ Workspace (output)
 - OpenRouter
 - Ollama (local models)
 - Anthropic (Claude)
+- Gemini
+- Langdock
+
+## v0.3.0 Features
+
+### Architect Reliability
+- Strict schema validation for plan output
+- Multi-pass JSON recovery from LLM responses
+- Bounded retry strategy with error classification
+
+### Non-interactive Mode
+- `--yes` — Auto-approve shell commands and file writes
+- `--ci` — Fully non-interactive for CI/CD pipelines
+
+### Benchmark Runner
+- `node benchmarks/run.js` — Run benchmark suite
+- Isolated workspaces per benchmark
+- Scorecards at `~/.klaw/benchmarks/scorecards/`
+
+### Known Limitations (v0.3.0)
+- Streaming responses not yet implemented
 - Gemini (Google)
 - Langdock
 
