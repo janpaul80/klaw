@@ -149,8 +149,6 @@ Workspace (output)
 
 ### Known Limitations (v0.3.0)
 - Streaming responses not yet implemented
-- Gemini (Google)
-- Langdock
 
 Configure your provider in `~/.klaw/config.json`:
 
