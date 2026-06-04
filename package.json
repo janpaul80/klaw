@@ -1,6 +1,6 @@
 {
   "name": "@phartmann80/klaw",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Local AI runtime for running agents with your own models and APIs",
   "main": "index.js",
   "homepage": "https://klaw.at",
