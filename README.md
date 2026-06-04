@@ -7,7 +7,7 @@
 <h1 align="center">KLAW</h1>
 
 <p align="center">
-  Local AI runtime for transparent agent execution.
+  Run AI agents in your terminal. No cloud. No hidden decisions.
 </p>
 
 <p align="center">
@@ -18,18 +18,11 @@
   <a href="https://www.npmjs.com/package/@phartmann80/klaw">npm</a>
 </p>
 
-KLAW is a local-first AI runtime that helps developers execute tasks through transparent terminal-based agents. Instead of hiding decisions behind a cloud service, KLAW keeps planning, file creation, shell execution, and repair attempts visible and understandable.
+## What is this?
 
-## What is KLAW?
+KLAW runs AI agents on your machine. You give it a task, it plans, creates files, and runs commands—in your terminal, visible the whole time.
 
-KLAW is a local-first AI runtime that helps developers execute tasks through transparent terminal-based agents.
-
-- Run AI agents locally
-- Write files
-- Execute shell commands
-- Keep everything visible in your terminal
-
-KLAW is not a cloud workspace, enterprise orchestrator, autonomous black box, or SaaS product. It is a practical developer tool for building with AI locally.
+It's not a cloud service. It's not an autonomous coding bot. It's a tool that runs locally and shows you everything it's doing.
 
 ## Install
 
@@ -37,120 +30,72 @@ KLAW is not a cloud workspace, enterprise orchestrator, autonomous black box, or
 npm install -g @phartmann80/klaw
 ```
 
-### Windows PowerShell
+Then set your API key:
 
-```powershell
-node --version
-npm --version
-npm install -g @phartmann80/klaw
-$env:OPENAI_API_KEY="your_openai_api_key"
-klaw doctor
-klaw init
+```bash
+# For OpenAI
+export OPENAI_API_KEY=sk_...
+
+# For Anthropic
+export ANTHROPIC_API_KEY=sk_...
+
+# Or use Ollama locally (no API key needed)
+```
+
+Run `klaw doctor` to check your setup:
+
+```bash
+$ klaw doctor
+[KLAW][SYSTEM] Doctor
+[KLAW][DOCTOR] OK Package: 0.3.0
+[KLAW][DOCTOR] OK Provider: openai
+[KLAW][DOCTOR] OK Workspace writable: true
+[KLAW][DOCTOR] WARN OPENAI_API_KEY: missing
+```
+
+The key is missing—that's expected until you set it.
+
+## Quick start
+
+```bash
 klaw run "create a hello script"
 ```
 
-To persist the API key:
+This creates a new directory in `~/.klaw/workspaces/` with your project.
 
-```powershell
-[Environment]::SetEnvironmentVariable("OPENAI_API_KEY", "your_key", "User")
-```
-
-### WSL or Linux
+## Run a Next.js app
 
 ```bash
-node --version
-npm --version
-npm install -g @phartmann80/klaw
-export OPENAI_API_KEY="your_openai_api_key"
-klaw doctor
-klaw init
-klaw run "create a hello script"
+klaw run "build a Next.js landing page"
+cd /path/to/workspace
+npm install
+npm run dev
 ```
 
-To persist the key:
-
-```bash
-echo 'export OPENAI_API_KEY="your_key"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-### macOS
-
-```bash
-node --version
-npm --version
-npm install -g @phartmann80/klaw
-export OPENAI_API_KEY="your_openai_api_key"
-klaw doctor
-klaw init
-klaw run "create a hello script"
-```
-
-## Quick Start
-
-```bash
-klaw init
-klaw doctor
-klaw run "create a hello script"
-```
-
-Use a specific workspace:
-
-```bash
-klaw run "build a landing page" --workspace ./my-app
-```
-
-By default, KLAW creates workspaces in:
-
-```text
-~/.klaw/workspaces
-```
-
-## Agent Workflow
+## How it works
 
 ```
-User Prompt
-    ↓
-Architect (generates plan)
-    ↓
-Writer (creates files)
-    ↓
-Shell (runs commands)
-    ↓
-Fixer (repairs failures)
-    ↓
-Workspace (output)
+you: "build a landing page"
+  → Architect: makes a plan
+  → Writer: creates files
+  → Shell: runs npm install, npm run dev
+  → Fixer: retries if something breaks
 ```
 
-## Supported Providers
+You see every step in your terminal.
+
+## Providers
+
+KLAW works with:
 
 - OpenAI
 - OpenRouter
-- Ollama (local models)
-- Anthropic (Claude)
+- Anthropic
 - Gemini
 - Langdock
+- Ollama (runs locally, no API key needed)
 
-## v0.3.0 Features
-
-### Architect Reliability
-- Strict schema validation for plan output
-- Multi-pass JSON recovery from LLM responses
-- Bounded retry strategy with error classification
-
-### Non-interactive Mode
-- `--yes` — Auto-approve shell commands and file writes
-- `--ci` — Fully non-interactive for CI/CD pipelines
-
-### Benchmark Runner
-- `node benchmarks/run.js` — Run benchmark suite
-- Isolated workspaces per benchmark
-- Scorecards at `~/.klaw/benchmarks/scorecards/`
-
-### Known Limitations (v0.3.0)
-- Streaming responses not yet implemented
-
-Configure your provider in `~/.klaw/config.json`:
+Set your provider in `~/.klaw/config.json`:
 
 ```json
 {
@@ -159,7 +104,7 @@ Configure your provider in `~/.klaw/config.json`:
 }
 ```
 
-For Ollama (local):
+For local models:
 
 ```json
 {
@@ -168,72 +113,83 @@ For Ollama (local):
 }
 ```
 
+## CI/CD
+
+Use `--yes` to auto-approve commands, or `--ci` for fully non-interactive mode:
+
+```bash
+# Auto-approve everything
+klaw run "create a script" --yes
+
+# Fail if approval would be needed
+klaw run "create a script" --ci
+```
+
 ## Commands
 
 ```bash
-klaw doctor      # Check system status
-klaw init       # Initialize config
+klaw doctor      # Check your setup
+klaw init       # Create config
 klaw run "task" # Run a task
-klaw logs       # View execution logs
-klaw config     # Show configuration
+klaw logs       # Show logs
+klaw config     # Show config
 ```
 
-## Configuration
+## Defaults
 
-Default config in `~/.klaw/config.json`:
+Permissions are strict by default—KLAW asks before running shell commands or writing files.
+
+Edit `~/.klaw/config.json` to change this:
 
 ```json
 {
-  "version": "0.2.0",
   "provider": "openai",
-  "model": "gpt-4.1-mini",
-  "workspaceRoot": "~/.klaw/workspaces",
   "permissions": {
-    "fileWrite": true,
-    "shell": "prompt"
-  },
-  "fixer": {
-    "enabled": true,
-    "retries": 1
-  },
-  "memory": {
-    "enabled": true
+    "shell": "allow",   # don't ask
+    "fileWrite": true  # allow writes
   }
 }
 ```
 
-## Features
+## What works
 
-- Local-first execution
-- Transparent terminal logs
-- Real shell command execution
-- Workspace isolation
-- Memory logging
-- Multiple provider support
-- Open-source (MIT)
+- Creating Next.js, React, Express, Node.js projects
+- Running npm commands
+- File generation from AI
+- Multiple providers
+- Retry on failure (simple retry loop)
 
-## Security Notes
+## What doesn't work yet
 
-KLAW runs shell commands locally. Treat it like any tool that can modify files and execute commands on your machine.
+- Streaming responses
+- Complex multi-file edits (it rewrites files)
+- Advanced retry logic
 
-- Shell commands require approval by default
-- File writes are blocked outside the workspace
-- Existing files are backed up before overwrite
-- API keys should come from your environment
-- Do not run untrusted tasks in sensitive directories
+It's early software. It's useful for straightforward tasks like "build a landing page" or "create an API endpoint."
 
-## Known Limitations
+## Benchmarks
 
-- KLAW is still early software
-- The repair loop is simple (one retry)
-- Not a secure sandbox for untrusted code
-- Not production-ready autonomous engineering software
+Run the benchmark suite to test AI output quality:
+
+```bash
+node benchmarks/run.js
+```
+
+Scorecards go to `~/.klaw/benchmarks/scorecards/`.
+
+## Security
+
+KLAW runs shell commands locally. It can create and delete files in its workspace.
+
+- It asks before running commands (by default)
+- It only writes to its workspace directory
+- Your API key stays in your environment
+- Don't run untrusted tasks in sensitive directories
 
 ## Links
 
 - Website: https://www.klaw.at/
 - GitHub: https://github.com/janpaul80/klaw
-- npm: https://www.npmjs.com/package/@phartmann80/klaw
 
 ## License
 
