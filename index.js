@@ -12,7 +12,7 @@ const { executeTask } = require('./src/runtime');
 const packageJson = require('./package.json');
 
 const program = new Command();
-program.version('0.2.0');
+program.version(packageJson.version);
 
 function commandExists(command) {
   const { spawnSync } = require('child_process');
