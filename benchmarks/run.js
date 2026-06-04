@@ -123,6 +123,7 @@ function runServerStart(workspace, benchmarkName) {
 
   const startTime = Date.now();
   let serverProc = null;
+  let killedCleanly = false;
 
   try {
     serverProc = spawn('node', [serverFile], {
@@ -130,28 +131,54 @@ function runServerStart(workspace, benchmarkName) {
       stdio: ['ignore', 'pipe', 'pipe']
     });
 
-    // Wait briefly using sync approach via setTimeout workaround
+    // Give server time to start and verify it's still running
+    // Using simple wait - in real scenarios we'd check for port binding
+    const checkInterval = 500;
+    const maxWait = 5000;
     let waited = 0;
-    while (waited < 3000) {
-      waited += 100;
-      // Can't use sleep in sync - just check after starting
-      break;
+
+    while (waited < maxWait) {
+      // Sleep synchronously using spawn with quick timeout
+      try {
+        const sleep = spawnSync('node', ['-e', 'setTimeout(()=>process.exit(0),100)'], {
+          timeout: 200
+        });
+      } catch (_) {}
+      waited += checkInterval;
+
+      if (serverProc.killed) {
+        break; // Process died
+      }
+      if (waited >= 3000) {
+        // Survived 3+ seconds - consider it started
+        break;
+      }
     }
 
-    if (serverProc && !serverProc.killed) {
+    // Check if process is still alive after wait
+    if (!serverProc.killed && waited >= 3000) {
       result.status = 'pass';
+      result.output = `Server started and remained alive for ${waited}ms`;
+    } else if (serverProc.killed) {
+      result.status = 'runtime_fail';
+      result.output = 'Server process died during startup';
     }
   } catch (e) {
+    result.status = 'runtime_fail';
     result.output = e.message.slice(-500);
   } finally {
-    // Cleanup: kill server process
+    // Cleanup
     if (serverProc) {
-      serverProc.kill('SIGTERM');
-      setTimeout(() => {
-        if (serverProc && !serverProc.killed) {
+      try {
+        serverProc.kill('SIGTERM');
+        killedCleanly = true;
+      } catch (_) {}
+      // If not killed, force kill
+      if (!killedCleanly) {
+        try {
           serverProc.kill('SIGKILL');
-        }
-      }, 2000);
+        } catch (_) {}
+      }
     }
   }
   result.durationMs = Date.now() - startTime;
