@@ -16,7 +16,7 @@
   },
   "scripts": {
     "test": "npm run test:unit",
-    "test:unit": "node tests/architect/validation.test.js && node tests/architect/recovery.test.js && node tests/architect/retry.test.js && node tests/noninteractive.test.js && node tests/providers/a1-verification.js && node tests/run-tests.js",
+    "test:unit": "node tests/architect/validation.test.js && node tests/architect/recovery.test.js && node tests/architect/retry.test.js && node tests/noninteractive.test.js && node tests/providers/a1-verification.js && node tests/mcp/server.test.js && node tests/run-tests.js",
     "test:bench": "node benchmarks/run.js",
     "prepublishOnly": "npm run test:unit"
   },

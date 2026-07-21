@@ -9,6 +9,7 @@ const { defaultConfig, writeConfig, readConfig, resolveWorkspace, expandHome, co
 const { memoryPath } = require('./src/memory');
 const { createProvider } = require('./src/providers');
 const { executeTask } = require('./src/runtime');
+const { McpServer } = require('./src/mcp/server');
 const packageJson = require('./package.json');
 
 const program = new Command();
@@ -172,5 +173,13 @@ function isWritable(directory) {
     return false;
   }
 }
+
+program
+  .command('mcp')
+  .description('Start Klaw as an MCP (Model Context Protocol) stdio server')
+  .action(() => {
+    const server = new McpServer();
+    server.start();
+  });
 
 program.parse(process.argv);
