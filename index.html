@@ -402,6 +402,7 @@
         <div class="nav-links">
           <a href="#install">Install</a>
           <a href="#providers">Providers</a>
+          <a href="#mcp">MCP</a>
           <a href="#architecture">Architecture</a>
           <a href="https://github.com/janpaul80/klaw">GitHub</a>
           <a href="https://www.npmjs.com/package/@phartmann80/klaw">npm</a>
@@ -522,6 +523,29 @@
         </div>
       </section>
 
+      <!-- MCP Section -->
+      <section id="mcp" style="background: rgba(2, 6, 23, 0.4); border-top: 1px solid rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 80px 0;">
+        <div class="wrap">
+          <h2 class="section-title">Model Context Protocol</h2>
+          <p class="section-desc">Connect Klaw directly to Claude Desktop, Cursor, or any other MCP host to run Klaw agents as a tool.</p>
+
+          <div style="background: var(--bg-card); border: 1px solid var(--border-card); border-radius: 12px; padding: 30px; margin-top: 40px; font-family: monospace; font-size: 14px; overflow-x: auto; color: var(--text-secondary); line-height: 1.6;">
+            <div style="color: #60a5fa; margin-bottom: 10px;"># Start the MCP server locally over stdio</div>
+            <div style="color: var(--text-primary); font-weight: bold; margin-bottom: 25px;"><span class="prompt-symbol">$</span> klaw mcp</div>
+
+            <div style="color: #60a5fa; margin-bottom: 10px;"># Or connect Klaw dynamically to your Claude Desktop config file:</div>
+            <pre style="color: #34d399; margin: 0; padding: 0;">{
+  "mcpServers": {
+    "klaw": {
+      "command": "npx",
+      "args": ["-y", "@phartmann80/klaw", "mcp"]
+    }
+  }
+}</pre>
+          </div>
+        </div>
+      </section>
+
       <!-- Architecture Section -->
       <section id="architecture">
         <div class="wrap">
@@ -562,6 +586,7 @@
           <ul class="feature-list">
             <li class="feature-item"><span class="check-icon">✓</span> <span>CLI <code>--model</code> and <code>--provider</code> override flags</span></li>
             <li class="feature-item"><span class="check-icon">✓</span> <span>Non-interactive auto-approval mode with <code>--yes</code> and <code>--ci</code></span></li>
+            <li class="feature-item"><span class="check-icon">✓</span> <span>Model Context Protocol (MCP) server support built in</span></li>
             <li class="feature-item"><span class="check-icon">✓</span> <span>Zero telemetry; everything runs locally in your terminal</span></li>
             <li class="feature-item"><span class="check-icon">✓</span> <span>Automated recovery loop for broken builds</span></li>
           </ul>

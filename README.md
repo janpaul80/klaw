@@ -86,6 +86,30 @@ Run non-interactively in a CI pipeline:
 klaw run --ci "run tests and fix failures"
 ```
 
+## MCP Server Support
+
+Klaw supports the Model Context Protocol (MCP) as an inline stdio server. This lets you connect Klaw to other LLM hosts (such as Claude Desktop or Cursor) so they can run Klaw agents directly as tools.
+
+### Claude Desktop Configuration
+
+Add Klaw to your `claude_desktop_config.json` file:
+
+```json
+{
+  "mcpServers": {
+    "klaw": {
+      "command": "npx",
+      "args": ["-y", "@phartmann80/klaw", "mcp"]
+    }
+  }
+}
+```
+
+### Exposed Tools
+
+- `klaw_run`: Runs a coding agent loop to complete a software development task.
+- `klaw_doctor`: Diagnoses and prints local Klaw environment details.
+
 ## Safety and Status
 
 KLAW is an active experiment and a published NPM package. Since it runs shell commands directly on your local system, you should always run it in a scratch workspace first. Review its planned actions before approving them; never give the CLI credentials or secrets you wouldn't paste into a public prompt.
