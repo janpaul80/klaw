@@ -1,66 +1,61 @@
 # KLAW
 
-KLAW is a local AI agent runner for your terminal. You give it a task, it plans the work, creates files, and runs commands where you can see what is happening.
+KLAW is a local AI agent runner built for your terminal. You give it a task; it plans the steps, generates files, and executes commands, keeping everything fully visible as it runs.
 
-I made it local on purpose. The tool should be visible, simple to inspect, and easy to stop when you do not like what it is doing.
+I designed KLAW to be local-first on purpose. Your AI coding assistant should be transparent, easy to inspect, and simple to stop if it starts doing something unexpected.
 
 Website: [klaw.at](https://www.klaw.at/)  
 npm: [@phartmann80/klaw](https://www.npmjs.com/package/@phartmann80/klaw)
 
-## Install
+## Installation
+
+Install KLAW globally:
 
 ```bash
 npm install -g @phartmann80/klaw
 ```
 
-Set a provider key:
+Set your provider API keys:
 
 ```bash
 export OPENAI_API_KEY=sk_...
 export ANTHROPIC_API_KEY=sk_...
 ```
 
-You can also use Ollama locally without an API key.
+*(You can also use Ollama to run models locally, which requires no API keys.)*
 
-## Quick start
+## Quick Start
+
+Check your system status and initialize:
 
 ```bash
 klaw doctor
 klaw run "create a hello script"
 ```
 
-KLAW creates a workspace under `~/.klaw/workspaces/`.
+This creates a local workspace directory at `~/.klaw/workspaces/` to hold your projects.
 
-## What it does
+## Capabilities
 
-- Plans a small task
-- Writes files into a workspace
-- Runs shell commands with approval
-- Retries when a step fails
-- Works with cloud providers or local Ollama models
-- Supports non interactive mode for CI style runs
+- Plans tasks using structured JSON models
+- Writes files cleanly inside the designated workspace
+- Runs shell commands after asking for your explicit approval
+- Automatically repairs errors when builds fail
+- Supports multiple providers, including local Ollama setups
+- Offers non-interactive modes for automated CI environments
 
 ## Providers
 
-KLAW can be configured for:
-
-- OpenAI
-- OpenRouter
-- Anthropic
-- Gemini
-- Langdock
-- Ollama
-
-Example `~/.klaw/config.json`:
+Configure your model settings in `~/.klaw/config.json`:
 
 ```json
 {
   "provider": "openai",
-  "model": "gpt-4.1-mini"
+  "model": "gpt-4o-mini"
 }
 ```
 
-For Ollama:
+For a local Ollama configuration:
 
 ```json
 {
@@ -69,15 +64,28 @@ For Ollama:
 }
 ```
 
-## Useful commands
+## Useful Commands
 
+Check your runtime environment:
 ```bash
 klaw doctor
-klaw run "build a small landing page"
-klaw run --yes "create a simple API"
-klaw run --ci "run the test suite and fix failures"
 ```
 
-## Status
+Run a task interactively:
+```bash
+klaw run "build a simple express backend"
+```
 
-Published package and active experiment. Use it in a scratch workspace first, review changes before keeping them, and do not give it secrets you would not paste into a terminal yourself.
+Auto-approve commands:
+```bash
+klaw run --yes "create a hello script"
+```
+
+Run non-interactively in a CI pipeline:
+```bash
+klaw run --ci "run tests and fix failures"
+```
+
+## Safety and Status
+
+KLAW is an active experiment and a published NPM package. Since it runs shell commands directly on your local system, you should always run it in a scratch workspace first. Review its planned actions before approving them; never give the CLI credentials or secrets you wouldn't paste into a public prompt.
