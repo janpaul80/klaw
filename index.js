@@ -51,12 +51,19 @@ program
   .command('run <task>')
   .description('Execute a task via KLAW agents')
   .option('--provider <provider>', 'AI provider to use')
+  .option('--model <model>', 'AI model to use')
   .option('--workspace <path>', 'Workspace directory for this run')
   .option('--yes', 'Approve shell commands and file writes without prompting')
   .option('--ci', 'Fully non-interactive mode (no prompts, fails if approval required)')
   .action(async (task, options) => {
     try {
       const config = readConfig();
+      if (options.provider) {
+        config.provider = options.provider;
+      }
+      if (options.model) {
+        config.model = options.model;
+      }
       const nonInteractive = Boolean(options.ci);
 
       // Handle --yes and --ci flags

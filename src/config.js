@@ -2,11 +2,13 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+const packageJson = require('../package.json');
+
 function defaultConfig() {
   return {
-    version: '0.2.0',
+    version: packageJson.version,
     provider: 'openai',
-    model: 'gpt-4.1-mini',
+    model: 'gpt-4o-mini',
     baseUrl: '',
     apiKey: '',
     temperature: 0.2,

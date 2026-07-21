@@ -12,7 +12,7 @@ class AnthropicProvider extends BaseProvider {
     const apiKey = cfg.apiKey || process.env.ANTHROPIC_API_KEY;
     super({
       apiKey,
-      model: cfg.model || 'claude-3-5-haiku-20241022',
+      model: cfg.model || 'claude-3-5-sonnet-20241022',
       name: 'anthropic',
       baseUrl: cfg.baseUrl || 'https://api.anthropic.com/v1'
     });

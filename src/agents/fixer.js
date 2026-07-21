@@ -33,6 +33,7 @@ class FixerAgent {
         `stderr:\n${error.stderr || error.error || ''}`,
         `Plan:\n${JSON.stringify(plan || {}, null, 2)}`,
         `package.json:\n${readIfExists(this.workspaceRoot, 'package.json')}`,
+        `index.js:\n${readIfExists(this.workspaceRoot, 'index.js')}`,
         `next.config.js:\n${readIfExists(this.workspaceRoot, 'next.config.js')}`
       ].join('\n\n')
     });

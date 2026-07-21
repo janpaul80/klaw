@@ -15,8 +15,10 @@
     "klaw": "index.js"
   },
   "scripts": {
-    "test": "node tests/architect/validation.test.js && node tests/architect/recovery.test.js && node tests/architect/retry.test.js && node tests/noninteractive.test.js && node benchmarks/run.js",
-    "prepublishOnly": "npm test"
+    "test": "npm run test:unit",
+    "test:unit": "node tests/architect/validation.test.js && node tests/architect/recovery.test.js && node tests/architect/retry.test.js && node tests/noninteractive.test.js && node tests/run-tests.js",
+    "test:bench": "node benchmarks/run.js",
+    "prepublishOnly": "npm run test:unit"
   },
   "files": [
     "index.js",

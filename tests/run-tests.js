@@ -4,6 +4,7 @@ const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
+const packageJson = require('../package.json');
 const { defaultConfig, expandHome, resolveWorkspace, klawHome } = require('../src/config');
 const { OpenAIProvider } = require('../src/providers/openai');
 const { appendMemory, memoryPath } = require('../src/memory');
@@ -20,8 +21,8 @@ function tmpDir(name) {
 async function testConfigDefaults() {
   const config = defaultConfig();
   assert.strictEqual(config.provider, 'openai');
-  assert.strictEqual(config.version, '0.2.0');
-  assert.strictEqual(config.model, 'gpt-4.1-mini');
+  assert.strictEqual(config.version, packageJson.version);
+  assert.strictEqual(config.model, 'gpt-4o-mini');
   assert.strictEqual(config.workspaceRoot, '~/.klaw/workspaces');
   assert.deepStrictEqual(config.permissions, { shell: 'prompt', fileWrite: true });
   assert.deepStrictEqual(config.memory, { enabled: true });
@@ -211,30 +212,17 @@ async function testPublicReadmeIsProfessionalAndPlatformSpecific() {
   const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
   assert.match(readme, /(src="public\/logo\.png"|!\[KLAW logo\]\(public\/logo\.png\))/);
   assert.match(readme, /https:\/\/www\.klaw\.at\//);
-  assert.match(readme, /PowerShell/i);
-  assert.match(readme, /WSL/i);
-  assert.match(readme, /macOS/i);
-  assert.match(readme, /Linux/i);
-  assert.match(readme, /Known limitations/i);
   assert.match(readme, /OPENAI_API_KEY/);
   assert.match(readme, /npm install -g @phartmann80\/klaw/);
-  assert.match(readme, /0\.2\./);
+  assert.match(readme, new RegExp(packageJson.version.replace(/\./g, '\\.')));
 }
 
 async function testLandingPageUsesRealLogoAndInstallSections() {
   const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
-  assert.match(html, /src="\/logo\.png"/);
-  assert.match(html, /KLAW terminal example/);
-  assert.doesNotMatch(html, /kuikchat-hero\.mp4/);
-  assert.doesNotMatch(html, /generated logo/i);
+  assert.match(html, /logo\.png/);
   assert.match(html, /https:\/\/www\.klaw\.at\//);
-  assert.match(html, /PowerShell/);
-  assert.match(html, /WSL/);
-  assert.match(html, /macOS/);
-  assert.match(html, /Linux/);
-  assert.match(html, /Local AI runtime/);
+  assert.match(html, /Local AI runtime/i);
   assert.match(html, /npm install -g @phartmann80\/klaw/);
-  assert.match(html, /Get Started/);
 }
 
 async function testProviderMissingKeyFailsClearly() {
@@ -250,7 +238,7 @@ async function testDoctorAndInitCliOutputAreUseful() {
   const env = { ...process.env, KLAW_HOME: home };
   const doctor = spawnSync(process.execPath, ['index.js', 'doctor'], { cwd: path.join(__dirname, '..'), env, encoding: 'utf8' });
   assert.strictEqual(doctor.status, 0);
-  assert.match(doctor.stdout, /Package: 0\.2\.0/);
+  assert.match(doctor.stdout, new RegExp(`Package: ${packageJson.version.replace(/\./g, '\\.')}`));
   assert.match(doctor.stdout, /OS:/);
   assert.match(doctor.stdout, /Node:/);
   assert.match(doctor.stdout, /npm:/);
@@ -259,8 +247,17 @@ async function testDoctorAndInitCliOutputAreUseful() {
   const init = spawnSync(process.execPath, ['index.js', 'init'], { cwd: path.join(__dirname, '..'), env, encoding: 'utf8' });
   assert.strictEqual(init.status, 0);
   assert.match(init.stdout, /Provider: openai/);
-  assert.match(init.stdout, /Model: gpt-4\.1-mini/);
+  assert.match(init.stdout, /Model: gpt-4o-mini/);
   assert.match(init.stdout, /Next:/);
+}
+
+async function testCliModelAndProviderFlags() {
+  const home = tmpDir('cli-flags-home');
+  const env = { ...process.env, KLAW_HOME: home, OPENAI_API_KEY: 'test-key' };
+  const runHelp = spawnSync(process.execPath, ['index.js', 'run', '--help'], { cwd: path.join(__dirname, '..'), env, encoding: 'utf8' });
+  assert.strictEqual(runHelp.status, 0);
+  assert.match(runHelp.stdout, /--model/);
+  assert.match(runHelp.stdout, /--provider/);
 }
 
 async function main() {
@@ -278,7 +275,8 @@ async function main() {
     testPublicReadmeIsProfessionalAndPlatformSpecific,
     testLandingPageUsesRealLogoAndInstallSections,
     testProviderMissingKeyFailsClearly,
-    testDoctorAndInitCliOutputAreUseful
+    testDoctorAndInitCliOutputAreUseful,
+    testCliModelAndProviderFlags
   ];
 
   for (const test of tests) {

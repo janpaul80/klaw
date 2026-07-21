@@ -13,7 +13,7 @@ class OpenAIProvider extends BaseProvider {
       : process.env.OPENAI_API_KEY;
     super({
       apiKey,
-      model: cfg.model || 'gpt-4.1-mini',
+      model: cfg.model || 'gpt-4o-mini',
       name: 'openai',
       baseUrl: cfg.baseUrl || 'https://api.openai.com/v1'
     });

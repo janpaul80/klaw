@@ -11,7 +11,7 @@ class OpenRouterProvider extends BaseProvider {
     const apiKey = cfg.apiKey || process.env.OPENROUTER_API_KEY;
     super({
       apiKey,
-      model: cfg.model || 'openai/gpt-4.1-mini',
+      model: cfg.model || 'openai/gpt-4o-mini',
       name: 'openrouter',
       baseUrl: cfg.baseUrl || 'https://openrouter.ai/api/v1'
     });
