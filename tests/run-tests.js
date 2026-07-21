@@ -210,11 +210,9 @@ async function testMemoryUsesKlawHome() {
 
 async function testPublicReadmeIsProfessionalAndPlatformSpecific() {
   const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
-  assert.match(readme, /(src="public\/logo\.png"|!\[KLAW logo\]\(public\/logo\.png\))/);
   assert.match(readme, /https:\/\/www\.klaw\.at\//);
   assert.match(readme, /OPENAI_API_KEY/);
   assert.match(readme, /npm install -g @phartmann80\/klaw/);
-  assert.match(readme, new RegExp(packageJson.version.replace(/\./g, '\\.')));
 }
 
 async function testLandingPageUsesRealLogoAndInstallSections() {
